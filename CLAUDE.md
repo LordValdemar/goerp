@@ -1,6 +1,14 @@
 # GoERP
 
-Sistema ERP para pequenas e médias empresas: clientes, produtos, estoque, vendas e financeiro.
+Sistema ERP para pequenas e médias empresas.
+
+## Módulos
+- **cadastros** – clientes, fornecedores, produtos, categorias, unidades de medida
+- **estoque** – saldos, movimentações (entrada/saída/ajuste), inventário
+- **vendas** – pedidos de venda e PDV (frente de caixa: abertura/fechamento de caixa, venda rápida, formas de pagamento)
+- **compras** – pedidos de compra e recebimento de mercadorias (gera entrada no estoque e conta a pagar)
+- **financeiro** – contas a pagar/receber, caixa e bancos, fluxo de caixa
+- **fiscal** – emissão de NF-e/NFC-e, regras de tributação (ICMS, IPI, PIS, COFINS), NCM/CFOP
 
 ## Stack
 - Java 21
@@ -24,16 +32,18 @@ Pacote base: `br.com.goerp`. Organização por módulo (package-by-feature):
 src/main/java/br/com/goerp/
 ├── GoErpApplication.java
 ├── shared/            # exceções, handler global de erros, config, utilitários
-├── clientes/
-│   ├── Cliente.java               # entidade JPA
-│   ├── ClienteRepository.java     # Spring Data
-│   ├── ClienteService.java        # regras de negócio
-│   ├── ClienteController.java     # REST
-│   └── dto/                       # records de request/response
-├── produtos/
+├── cadastros/
+│   └── cliente/
+│       ├── Cliente.java               # entidade JPA
+│       ├── ClienteRepository.java     # Spring Data
+│       ├── ClienteService.java        # regras de negócio
+│       ├── ClienteController.java     # REST
+│       └── dto/                       # records de request/response
 ├── estoque/
-├── vendas/
-└── financeiro/
+├── vendas/            # inclui pdv/
+├── compras/
+├── financeiro/
+└── fiscal/
 src/main/resources/
 ├── application.yml
 └── db/migration/      # scripts Flyway: V1__descricao.sql, V2__...
@@ -42,6 +52,10 @@ src/main/resources/
 - Controller → Service → Repository. Controllers não acessam repositories diretamente.
 - Controllers recebem e devolvem DTOs (Java `record`), nunca entidades JPA.
 - Um módulo só acessa outro pela camada de service, nunca pelo repository alheio.
+- Fluxos entre módulos: venda/PDV → baixa no estoque + conta a receber + documento fiscal;
+  compra recebida → entrada no estoque + conta a pagar. Movimentações de estoque e lançamentos
+  financeiros são gerados pelos services de `estoque` e `financeiro`, nunca gravados direto por outros módulos.
+- Saldo de estoque é sempre derivado de movimentações; nunca alterar saldo sem registrar a movimentação.
 
 ## Convenções
 - Nomes de classes, métodos e variáveis em português, alinhados ao domínio (`Cliente`, `emitirNota`).
