@@ -16,6 +16,7 @@ Sistema ERP para pequenas e médias empresas.
 - Maven (usar sempre o wrapper `./mvnw`)
 - PostgreSQL 16; migrations com Flyway
 - Testes: JUnit 5, Mockito, Spring Boot Test, Testcontainers (PostgreSQL)
+- Docker + Docker Compose para subir o ambiente (PostgreSQL + aplicação)
 - Lombok apenas para `@Getter`, `@Setter`, `@RequiredArgsConstructor` e `@Builder`
 
 ## Comandos
@@ -24,6 +25,10 @@ Sistema ERP para pequenas e médias empresas.
 - Testar tudo: `./mvnw test`
 - Testar uma classe: `./mvnw test -Dtest=NomeDaClasseTest`
 - Build completo (com testes): `./mvnw clean verify`
+- Subir só o banco (para rodar a app pela IDE/`spring-boot:run`): `docker compose up -d db`
+- Subir tudo (banco + app): `docker compose up -d --build`
+- Derrubar e apagar os dados: `docker compose down -v`
+- Os testes usam Testcontainers: o Docker precisa estar rodando para `./mvnw test`.
 
 ## Arquitetura
 Pacote base: `br.com.goerp`. Organização por módulo (package-by-feature):
