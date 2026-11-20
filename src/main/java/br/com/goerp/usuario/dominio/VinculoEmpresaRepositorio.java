@@ -12,4 +12,9 @@ public interface VinculoEmpresaRepositorio {
     List<VinculoEmpresa> listarDoUsuario(Long usuarioId);
 
     boolean existeAtivoComPerfil(Long perfilId);
+
+    /** Todos os vínculos da empresa atual. */
+    List<VinculoEmpresa> listarDaEmpresa();
+
+    long contarAtivosComPerfil(Long perfilId);
 }

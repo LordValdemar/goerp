@@ -1,5 +1,7 @@
 package br.com.goerp.usuario.infraestrutura.persistencia;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -38,6 +40,11 @@ class UsuarioRepositorioJpa implements UsuarioRepositorio {
     @Override
     public boolean existeComEmail(Email email) {
         return jpa.existsByEmail(email);
+    }
+
+    @Override
+    public List<Usuario> buscarPorIds(Collection<Long> ids) {
+        return jpa.findAllById(ids).stream().map(UsuarioRepositorioJpa::paraDominio).toList();
     }
 
     private UsuarioJpa buscarRegistro(Long id) {

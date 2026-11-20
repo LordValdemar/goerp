@@ -10,4 +10,6 @@ public interface SessaoDeAcessoRepositorio {
     Optional<SessaoDeAcesso> buscarPorHashDoToken(String hashDoToken);
 
     void revogarTodasDoUsuario(Long usuarioId, Instant agora);
+
+    void revogarTodasDoUsuarioNaEmpresa(Long usuarioId, Long empresaId, Instant agora);
 }

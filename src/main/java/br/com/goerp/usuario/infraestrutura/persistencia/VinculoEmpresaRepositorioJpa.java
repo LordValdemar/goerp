@@ -43,6 +43,16 @@ class VinculoEmpresaRepositorioJpa implements VinculoEmpresaRepositorio {
         return jpa.existsByPerfilIdAndAtivoTrue(perfilId);
     }
 
+    @Override
+    public List<VinculoEmpresa> listarDaEmpresa() {
+        return jpa.findAllByOrderById().stream().map(VinculoEmpresaRepositorioJpa::paraDominio).toList();
+    }
+
+    @Override
+    public long contarAtivosComPerfil(Long perfilId) {
+        return jpa.countByPerfilIdAndAtivoTrue(perfilId);
+    }
+
     private VinculoEmpresaJpa buscarRegistro(Long id) {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo", id));
     }

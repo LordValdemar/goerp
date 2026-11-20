@@ -37,6 +37,11 @@ class SessaoDeAcessoRepositorioJpa implements SessaoDeAcessoRepositorio {
         jpa.revogarTodasDoUsuario(usuarioId, agora);
     }
 
+    @Override
+    public void revogarTodasDoUsuarioNaEmpresa(Long usuarioId, Long empresaId, Instant agora) {
+        jpa.revogarTodasDoUsuarioNaEmpresa(usuarioId, empresaId, agora);
+    }
+
     private SessaoDeAcessoJpa buscarRegistro(Long id) {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Sessão", id));
     }

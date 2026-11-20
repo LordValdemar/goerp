@@ -21,6 +21,9 @@ import br.com.goerp.usuario.aplicacao.autenticacao.ResultadoDaAutenticacao.Auten
 import br.com.goerp.usuario.aplicacao.autenticacao.ResultadoDaAutenticacao.Recusado;
 import br.com.goerp.usuario.aplicacao.autenticacao.ResultadoDaAutenticacao.SelecaoDeEmpresaNecessaria;
 import br.com.goerp.usuario.aplicacao.autenticacao.SolicitacaoDeLogin;
+import br.com.goerp.usuario.aplicacao.gestao.TrocarPropriaSenha;
+import br.com.goerp.usuario.aplicacao.gestao.TrocarPropriaSenha.ResultadoDaTrocaDeSenha;
+import br.com.goerp.usuario.dominio.SenhaAtualIncorretaException;
 import br.com.goerp.usuario.web.AutenticacaoResponses.SelecaoDeEmpresa;
 import br.com.goerp.usuario.web.AutenticacaoResponses.Tokens;
 import br.com.goerp.usuario.web.AutenticacaoResponses.UsuarioAtual;
@@ -39,6 +42,7 @@ public class AutenticacaoController {
     private final AutenticarUsuario autenticarUsuario;
     private final RenovarAcesso renovarAcesso;
     private final EncerrarSessao encerrarSessao;
+    private final TrocarPropriaSenha trocarPropriaSenha;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -64,6 +68,16 @@ public class AutenticacaoController {
         List<String> permissoes = token.getClaimAsStringList(CLAIM_PERMISSOES);
         return new UsuarioAtual(Long.valueOf(token.getSubject()), token.getClaimAsString(CLAIM_NOME),
                 empresa == null ? null : empresa.longValue(), permissoes == null ? List.of() : permissoes);
+    }
+
+    /** Troca da própria senha: basta estar autenticado. Depois dela, é preciso fazer login de novo. */
+    @PostMapping("/senha")
+    public ResponseEntity<Void> trocarSenha(@Valid @RequestBody TrocaDeSenhaRequest request) {
+        var resultado = trocarPropriaSenha.executar(request.senhaAtual(), request.novaSenha());
+        if (resultado == ResultadoDaTrocaDeSenha.SENHA_ATUAL_INCORRETA) {
+            throw new SenhaAtualIncorretaException();
+        }
+        return ResponseEntity.noContent().build();
     }
 
     private static ResponseEntity<?> responder(ResultadoDaAutenticacao resultado) {

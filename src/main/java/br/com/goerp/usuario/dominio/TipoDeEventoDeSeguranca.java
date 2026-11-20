@@ -7,5 +7,6 @@ public enum TipoDeEventoDeSeguranca {
     LOGOUT,
     ACESSO_RENOVADO,
     RENOVACAO_RECUSADA,
-    TOKEN_REUTILIZADO
+    TOKEN_REUTILIZADO,
+    SENHA_ALTERADA
 }

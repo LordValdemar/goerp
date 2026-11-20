@@ -14,4 +14,10 @@ interface SessaoDeAcessoJpaRepository extends JpaRepository<SessaoDeAcessoJpa, L
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE SessaoDeAcesso s SET s.revogadaEm = :agora WHERE s.usuarioId = :usuarioId AND s.revogadaEm IS NULL")
     void revogarTodasDoUsuario(Long usuarioId, Instant agora);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE SessaoDeAcesso s SET s.revogadaEm = :agora
+            WHERE s.usuarioId = :usuarioId AND s.empresaId = :empresaId AND s.revogadaEm IS NULL""")
+    void revogarTodasDoUsuarioNaEmpresa(Long usuarioId, Long empresaId, Instant agora);
 }
