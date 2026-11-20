@@ -7,8 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import br.com.goerp.compartilhado.aplicacao.Pagina;
-import br.com.goerp.compartilhado.aplicacao.Paginacao;
+import br.com.goerp.compartilhado.dominio.Pagina;
+import br.com.goerp.compartilhado.dominio.Paginacao;
 
 /** Converte entre a paginação da aplicação e a do Spring Data. */
 public final class Paginas {

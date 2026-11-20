@@ -1,4 +1,4 @@
-package br.com.goerp.compartilhado.aplicacao;
+package br.com.goerp.compartilhado.dominio;
 
 /** Qual página buscar. A primeira página é a 0. O tamanho é limitado para proteger o banco. */
 public record Paginacao(int numero, int tamanho) {

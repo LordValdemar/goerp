@@ -96,3 +96,16 @@ Demais rotas exigem o cabeçalho `Authorization: Bearer <tokenDeAcesso>`.
 | POST | `/api/v1/empresas/{id}/reativar` | reativa |
 
 Todas exigem a permissão `PLATAFORMA_ADMINISTRAR`.
+
+## Cadastros
+
+### Clientes (`CLIENTE_LER` / `CLIENTE_GERENCIAR`)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/v1/clientes?busca=&ativo=&pagina=0&tamanho=20` | pesquisa paginada (nome, nome fantasia ou começo do CPF/CNPJ) |
+| GET | `/api/v1/clientes/{id}` | consulta |
+| POST | `/api/v1/clientes` | cadastra (o documento não muda depois) |
+| PUT | `/api/v1/clientes/{id}` | altera; envie a `versao` lida (se outra pessoa alterou antes, responde **409**) |
+| DELETE | `/api/v1/clientes/{id}` | inativa |
+| POST | `/api/v1/clientes/{id}/reativar` | reativa |

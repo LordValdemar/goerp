@@ -82,8 +82,8 @@ Pacote base: `br.com.goerp`. Cada módulo é dividido em quatro camadas:
 src/main/java/br/com/goerp/
 ├── GoErpApplication.java
 ├── compartilhado/                # o que é comum a todos os módulos (mesmas camadas)
-│   ├── dominio/                  # objetos de valor (Documento/Cpf/Cnpj, Endereco, Dinheiro, Quantidade, Gtin, Ncm...), exceções
-│   ├── aplicacao/                # @CasoDeUso, @ServicoDeAplicacao, Pagina/Paginacao, portas UsuarioAtual/EmpresaAtual
+│   ├── dominio/                  # objetos de valor (Documento/Cpf/Cnpj, Endereco, Dinheiro, Quantidade, Gtin, Ncm...), Pagina/Paginacao, exceções
+│   ├── aplicacao/                # @CasoDeUso, @ServicoDeAplicacao, portas UsuarioAtual/EmpresaAtual
 │   ├── infraestrutura/           # auditoria (Envers), segurança, transação, conversores JPA
 │   └── web/                      # TratadorGlobalDeErros
 ├── plataforma/                   # coordena empresa + usuario (cadastro de empresas pelo admin da plataforma)
@@ -128,7 +128,7 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 - Injeção de dependência sempre por construtor, campos `final`; nunca `@Autowired` em campo.
 - Lombok **só** em `infraestrutura` e `web`. Domínio e aplicação são Java puro.
 - Valores monetários sempre com o objeto de valor `Dinheiro` (`BigDecimal`, 2 casas; recusa valores digitados com mais casas; cálculos arredondam meio-para-o-par). Quantidades com `Quantidade` (3 casas). Nunca `double`/`float`.
-- Listagens paginadas devolvem `Pagina<T>` (aplicação), nunca `Page` do Spring; tamanho máximo 100.
+- Listagens paginadas devolvem `Pagina<T>` (compartilhado/dominio), nunca `Page` do Spring; tamanho máximo 100.
 - Entidades editáveis por várias pessoas têm controle de versão: a API recebe a `versao` lida e devolve **409** (`ConflitoDeEdicaoException`) se o registro mudou nesse meio-tempo.
 - Datas com `java.time`; obter a hora atual sempre via `Clock` injetado (testável; avança em microssegundos, a precisão do PostgreSQL).
 - Resultados esperados de uma operação (ex.: login recusado) são retornados como valor (`sealed interface`), não como exceção — assim a transação confirma o que precisa ficar registrado.

@@ -1,4 +1,4 @@
-package br.com.goerp.compartilhado.aplicacao;
+package br.com.goerp.compartilhado.dominio;
 
 import java.util.List;
 import java.util.function.Function;
