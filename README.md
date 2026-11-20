@@ -152,3 +152,16 @@ Custo médio ponderado. Movimentações do mesmo produto ao mesmo tempo esperam 
 | GET | `/api/v1/estoque/movimentacoes/{id}` | `ESTOQUE_LER` | uma movimentação |
 | GET | `/api/v1/estoque/conferencia` | `ESTOQUE_AJUSTAR` | recalcula os saldos pelas movimentações e aponta divergências (deve vir `consistente: true`) |
 | GET / PUT | `/api/v1/estoque/configuracao` | `ESTOQUE_LER` / `ESTOQUE_AJUSTAR` | `{permiteEstoqueNegativo}` (padrão: não) |
+
+### Inventário
+
+Contagem física: só os produtos **contados** são ajustados (serve para inventário geral ou parcial). Ao finalizar, o saldo de cada
+produto contado vira a quantidade contada, com ajustes de origem `INVENTARIO`, tudo numa única transação. Um inventário aberto por vez.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/estoque/inventarios` | `ESTOQUE_AJUSTAR` | `{descricao}` abre |
+| PUT | `/api/v1/estoque/inventarios/{id}/contagens/{produtoId}` | `ESTOQUE_MOVIMENTAR` ou `ESTOQUE_AJUSTAR` | `{quantidade}` registra ou corrige a contagem |
+| POST | `/api/v1/estoque/inventarios/{id}/finalizar` | `ESTOQUE_AJUSTAR` | ajusta o estoque e devolve os ajustes |
+| POST | `/api/v1/estoque/inventarios/{id}/cancelar` | `ESTOQUE_AJUSTAR` | descarta sem mexer no estoque |
+| GET | `/api/v1/estoque/inventarios[/{id}]` | `ESTOQUE_LER` | consulta |

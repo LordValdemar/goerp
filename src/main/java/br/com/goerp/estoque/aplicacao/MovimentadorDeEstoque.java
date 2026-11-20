@@ -1,18 +1,22 @@
 package br.com.goerp.estoque.aplicacao;
 
 import java.time.Clock;
+import java.util.Optional;
 
 import br.com.goerp.cadastros.produto.aplicacao.BuscarProduto;
 import br.com.goerp.cadastros.produto.aplicacao.ProdutoDetalhado;
 import br.com.goerp.compartilhado.aplicacao.EmpresaAtual;
 import br.com.goerp.compartilhado.aplicacao.ServicoDeAplicacao;
+import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.estoque.dominio.ConfiguracaoDeEstoqueRepositorio;
 import br.com.goerp.estoque.dominio.Movimentacao;
 import br.com.goerp.estoque.dominio.MovimentacaoRepositorio;
+import br.com.goerp.estoque.dominio.OrigemDaMovimentacao;
 import br.com.goerp.estoque.dominio.PedidoDeMovimentacao;
 import br.com.goerp.estoque.dominio.RegrasDeEstoque;
 import br.com.goerp.estoque.dominio.SaldoDeEstoque;
 import br.com.goerp.estoque.dominio.SaldoDeEstoqueRepositorio;
+import br.com.goerp.estoque.dominio.TipoDeMovimentacao;
 
 /**
  * Único caminho para mexer no estoque: busca o produto (da empresa atual), trava o saldo,
@@ -41,11 +45,41 @@ public class MovimentadorDeEstoque {
     }
 
     public Movimentacao movimentar(Long produtoId, PedidoDeMovimentacao pedido) {
-        ProdutoDetalhado produto = buscarProduto.executar(produtoId);
-        var regras = new RegrasDeEstoque(produto.produto().dados().controlaEstoque(), produto.unidade().fracionavel(),
-                configuracao.permiteEstoqueNegativo());
-
+        RegrasDeEstoque regras = regrasDo(produtoId);
         SaldoDeEstoque saldo = saldos.travarParaMovimentar(empresaAtual.id(), produtoId);
+        return aplicar(saldo, pedido, regras);
+    }
+
+    /**
+     * Ajusta o saldo para chegar exatamente na quantidade informada (usado pelo inventário).
+     * A diferença é calculada com o saldo já travado, então nenhuma venda simultânea a distorce.
+     *
+     * @return o ajuste lançado, ou vazio se o saldo já era essa quantidade
+     */
+    public Optional<Movimentacao> ajustarPara(Long produtoId, Quantidade alvo, String motivo,
+            OrigemDaMovimentacao origem, Long documentoDeOrigem, Long usuarioId) {
+        RegrasDeEstoque regras = regrasDo(produtoId);
+        SaldoDeEstoque saldo = saldos.travarParaMovimentar(empresaAtual.id(), produtoId);
+        Quantidade diferenca = alvo.subtrair(saldo.quantidade());
+        if (diferenca.compareTo(Quantidade.ZERO) == 0) {
+            return Optional.empty();
+        }
+        boolean falta = diferenca.negativa();
+        var pedido = new PedidoDeMovimentacao(
+                falta ? TipoDeMovimentacao.AJUSTE_DE_SAIDA : TipoDeMovimentacao.AJUSTE_DE_ENTRADA,
+                falta ? Quantidade.ZERO.subtrair(diferenca) : diferenca,
+                null, origem, documentoDeOrigem, motivo, null, usuarioId);
+        return Optional.of(aplicar(saldo, pedido, regras));
+    }
+
+    /** As regras do produto (da empresa atual: produto de outra empresa dá 404). */
+    public RegrasDeEstoque regrasDo(Long produtoId) {
+        ProdutoDetalhado produto = buscarProduto.executar(produtoId);
+        return new RegrasDeEstoque(produto.produto().dados().controlaEstoque(), produto.unidade().fracionavel(),
+                configuracao.permiteEstoqueNegativo());
+    }
+
+    private Movimentacao aplicar(SaldoDeEstoque saldo, PedidoDeMovimentacao pedido, RegrasDeEstoque regras) {
         Movimentacao movimentacao = saldo.movimentar(pedido, regras, relogio.instant());
         saldos.salvar(saldo);
         return movimentacoes.registrar(movimentacao);
