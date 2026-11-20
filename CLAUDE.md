@@ -48,7 +48,7 @@ Não começar um módulo antes do anterior estar concluído e testado.
   - Cada empresa monta seus perfis; o vínculo usuário-empresa aponta para um perfil; o token carrega as permissões do perfil (mudanças valem na próxima renovação, até 15 min).
   - O perfil Administrador de cada empresa tem sempre todas as permissões e não pode ser alterado nem inativado.
   - O `ArquiteturaTest` falha se um endpoint não tiver `@PreAuthorize` ou citar permissão inexistente.
-- **Backups automáticos** do PostgreSQL configurados no ambiente.
+- **Backups automáticos** do PostgreSQL: serviço `backup` no `docker-compose` (diário, mantém 7 dias / 4 semanas / 6 meses em `./backups`); a pasta deve ser copiada para fora do servidor.
 - **Fiscal:** integrar com uma API de emissão especializada (NF-e/NFC-e) em vez de implementar do zero; regras tributárias validadas com um contador.
 
 ## Stack
@@ -72,6 +72,8 @@ Não começar um módulo antes do anterior estar concluído e testado.
 - Subir tudo (banco + app): `docker compose up -d --build`
 - Derrubar e apagar os dados: `docker compose down -v`
 - Os testes usam Testcontainers: o Docker precisa estar rodando para `./mvnw test`.
+- Backup imediato: `scripts/backup-agora.sh`; restaurar: `scripts/restaurar-backup.sh <arquivo.sql.gz>`
+- Testar backup e restauração de ponta a ponta: `scripts/testar-backup.sh` (rodar ao mexer no banco ou no serviço de backup)
 
 ## Arquitetura (Clean Architecture)
 Pacote base: `br.com.goerp`. Cada módulo é dividido em quatro camadas:

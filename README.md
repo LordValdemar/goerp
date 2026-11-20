@@ -36,6 +36,21 @@ A API sobe em http://localhost:8080. Health check: http://localhost:8080/actuato
 
 O administrador da plataforma gerencia empresas, mas **não enxerga os dados internos** delas.
 
+## Backup
+
+O serviço `backup` do `docker-compose` faz um `pg_dump` compactado **todo dia às 3h** (configurável em `BACKUP_AGENDA`)
+e mantém os últimos **7 dias, 4 semanas e 6 meses** em `./backups` (`last/`, `daily/`, `weekly/`, `monthly/`).
+
+```bash
+scripts/backup-agora.sh                                   # backup imediato
+scripts/restaurar-backup.sh backups/daily/goerp-AAAAMMDD.sql.gz   # restaura (substitui os dados atuais)
+scripts/testar-backup.sh                                  # prova o ciclo backup → desastre → restauração
+```
+
+> **Importante:** copie a pasta `backups/` para fora do servidor (outro disco, nuvem). Backup guardado
+> só no próprio servidor não protege contra a perda do servidor. Rode `scripts/testar-backup.sh`
+> periodicamente: backup que nunca foi restaurado não é backup.
+
 ## Testes
 
 ```bash
