@@ -134,3 +134,17 @@ Mesmas rotas e regras dos clientes, em `/api/v1/fornecedores`. A pesquisa també
 | PUT | `/api/v1/produtos/{id}` | altera; envie a `versao` lida (**409** se outra pessoa alterou antes). Toda mudança de preço fica no histórico |
 | DELETE / POST `.../reativar` | `/api/v1/produtos/{id}` | inativa / reativa |
 | GET | `/api/v1/produtos/codigo-barras/{gtin}` | leitura do código de barras (PDV): só produtos ativos |
+
+## Estoque
+
+O saldo só muda por movimentações, que **nunca são alteradas nem apagadas** (o banco recusa); erros se corrigem com estorno.
+Custo médio ponderado. Movimentações do mesmo produto ao mesmo tempo esperam uma pela outra (saldo travado por produto).
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/estoque/entradas` | `ESTOQUE_MOVIMENTAR` | `{produtoId, quantidade, custoUnitario, documentoDeOrigem, observacao}` |
+| POST | `/api/v1/estoque/saidas` | `ESTOQUE_MOVIMENTAR` | `{produtoId, quantidade, motivo}` (consumo, doação...) |
+| POST | `/api/v1/estoque/ajustes` | `ESTOQUE_AJUSTAR` | `{produtoId, sentido: ENTRADA/SAIDA, quantidade, motivo}` |
+| POST | `/api/v1/estoque/movimentacoes/{id}/estorno` | `ESTOQUE_AJUSTAR` | `{motivo}`; cada movimentação só pode ser estornada uma vez |
+| GET | `/api/v1/estoque/saldos/{produtoId}` | `ESTOQUE_LER` | saldo e custo médio |
+| GET / PUT | `/api/v1/estoque/configuracao` | `ESTOQUE_LER` / `ESTOQUE_AJUSTAR` | `{permiteEstoqueNegativo}` (padrão: não) |

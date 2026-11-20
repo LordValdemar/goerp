@@ -14,7 +14,10 @@ public enum Permissao {
     FORNECEDOR_LER("Consultar fornecedores"),
     FORNECEDOR_GERENCIAR("Cadastrar, alterar e inativar fornecedores"),
     PRODUTO_LER("Consultar produtos, categorias e unidades de medida"),
-    PRODUTO_GERENCIAR("Cadastrar, alterar e inativar produtos, categorias e unidades de medida");
+    PRODUTO_GERENCIAR("Cadastrar, alterar e inativar produtos, categorias e unidades de medida"),
+    ESTOQUE_LER("Consultar saldos e movimentações de estoque"),
+    ESTOQUE_MOVIMENTAR("Lançar entradas e saídas manuais de estoque"),
+    ESTOQUE_AJUSTAR("Ajustar e estornar estoque, fazer inventário e configurar o estoque");
 
     private final String descricao;
 
