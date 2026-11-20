@@ -1,14 +1,12 @@
 package br.com.goerp;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 
-@SpringBootTest
-@Import(TestcontainersConfig.class)
-class GoErpApplicationTests {
+import br.com.goerp.suporte.TesteDeIntegracao;
+
+class GoErpApplicationTests extends TesteDeIntegracao {
 
     @Test
-    void contextoSobe() {
+    void aplicacaoSobeComAsMigrationsAplicadas() {
     }
 }

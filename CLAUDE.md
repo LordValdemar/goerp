@@ -36,6 +36,7 @@ Não começar um módulo antes do anterior estar concluído e testado.
   - toda entidade tem `criado_em`, `criado_por`, `atualizado_em`, `atualizado_por` (Spring Data Auditing);
   - entidades de negócio são `@Audited` (Hibernate Envers): cada alteração gera uma versão com usuário, empresa e data/hora;
   - nunca apagar registros de negócio; inativar.
+- **Transação:** garantida pela anotação `@CasoDeUso` (cada caso de uso é uma transação).
 - **Permissões por usuário:** todo endpoint exige autenticação e uma permissão específica (`@PreAuthorize`); não existe endpoint de negócio público.
 - **Backups automáticos** do PostgreSQL configurados no ambiente.
 - **Fiscal:** integrar com uma API de emissão especializada (NF-e/NFC-e) em vez de implementar do zero; regras tributárias validadas com um contador.
@@ -48,7 +49,8 @@ Não começar um módulo antes do anterior estar concluído e testado.
 - PostgreSQL 16; migrations com Flyway
 - Testes: JUnit 5, Mockito, Spring Boot Test, Testcontainers (PostgreSQL)
 - Docker + Docker Compose para subir o ambiente (PostgreSQL + aplicação)
-- Lombok apenas para `@Getter`, `@Setter`, `@RequiredArgsConstructor` e `@Builder`
+- ArchUnit para verificar a arquitetura
+- Lombok apenas na infraestrutura e na web (`@Getter`, `@Setter`, `@RequiredArgsConstructor`)
 
 ## Comandos
 - Compilar: `./mvnw clean compile`
@@ -61,55 +63,70 @@ Não começar um módulo antes do anterior estar concluído e testado.
 - Derrubar e apagar os dados: `docker compose down -v`
 - Os testes usam Testcontainers: o Docker precisa estar rodando para `./mvnw test`.
 
-## Arquitetura
-Pacote base: `br.com.goerp`. Organização por módulo (package-by-feature):
+## Arquitetura (Clean Architecture)
+Pacote base: `br.com.goerp`. Cada módulo é dividido em quatro camadas:
 
 ```
 src/main/java/br/com/goerp/
 ├── GoErpApplication.java
-├── shared/            # exceções, handler global de erros, config, utilitários
-├── cadastros/
-│   └── cliente/
-│       ├── Cliente.java               # entidade JPA
-│       ├── ClienteRepository.java     # Spring Data
-│       ├── ClienteService.java        # regras de negócio
-│       ├── ClienteController.java     # REST
-│       └── dto/                       # records de request/response
-├── estoque/
-├── vendas/            # inclui pdv/
-├── compras/
-├── financeiro/
-└── fiscal/
-src/main/resources/
-├── application.yml
-└── db/migration/      # scripts Flyway: V1__descricao.sql, V2__...
+├── compartilhado/                # o que é comum a todos os módulos (mesmas camadas)
+│   ├── dominio/                  # Cnpj, Textos, exceções de domínio
+│   ├── aplicacao/                # @CasoDeUso
+│   ├── infraestrutura/           # auditoria (Envers), segurança, transação, conversores JPA
+│   └── web/                      # TratadorGlobalDeErros
+└── <modulo>/                     # empresa, usuario, autenticacao, cadastros, estoque, ...
+    ├── dominio/                  # entidades e objetos de valor PUROS + interfaces de repositório
+    ├── aplicacao/                # casos de uso (uma classe por caso) + portas para serviços externos
+    ├── infraestrutura/           # adaptadores: persistencia/ (XxxJpa, XxxJpaRepository, XxxRepositorioJpa), JWT, BCrypt...
+    └── web/                      # controllers REST + records de request/response
+src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 ```
 
-- Controller → Service → Repository. Controllers não acessam repositories diretamente.
-- Controllers recebem e devolvem DTOs (Java `record`), nunca entidades JPA.
-- Um módulo só acessa outro pela camada de service, nunca pelo repository alheio.
-- Fluxos entre módulos: venda/PDV → baixa no estoque + conta a receber + documento fiscal;
-  compra recebida → entrada no estoque + conta a pagar. Movimentações de estoque e lançamentos
-  financeiros são gerados pelos services de `estoque` e `financeiro`, nunca gravados direto por outros módulos.
+**Regra de dependência** (verificada pelo `ArquiteturaTest` com ArchUnit — o build falha se for violada):
+- `dominio` → só `java.*` e outros `dominio`. Sem Spring, JPA, Jakarta ou Lombok.
+- `aplicacao` → só `java.*`, `dominio` e `aplicacao`. Sem Spring/JPA/HTTP.
+- `web` → `aplicacao` e `dominio`. Nunca chama repositório direto.
+- `infraestrutura` → implementa as interfaces do domínio/aplicação. Ninguém depende dela.
+
+**Como as peças se ligam:**
+- Entidade de domínio (`Empresa`) é separada da entidade JPA (`EmpresaJpa`). O adaptador (`EmpresaRepositorioJpa`) converte entre as duas. Anotações de banco (`@Entity`, `@Audited`, `@TenantId`) só existem na infraestrutura.
+- Entidades JPA estendem `EntidadeJpaAuditavel` (criado/atualizado em/por) e são `@Audited`.
+- Classes JPA e Spring Data são package-private dentro de `infraestrutura/persistencia`.
+- Casos de uso são anotados com `@CasoDeUso` (anotação nossa, sem Spring). A infraestrutura registra como bean e **executa cada chamada em uma transação** — não usar `@Transactional` em casos de uso, controllers ou domínio.
+- Um módulo usa outro chamando seus casos de uso, nunca o repositório alheio.
+
+**Fluxos entre módulos:**
+- venda/PDV → baixa no estoque + conta a receber + documento fiscal;
+- compra recebida → entrada no estoque + conta a pagar.
+- Movimentações de estoque e lançamentos financeiros são gerados pelos casos de uso de `estoque` e `financeiro`, nunca gravados direto por outros módulos.
 - Saldo de estoque é sempre derivado de movimentações; nunca alterar saldo sem registrar a movimentação.
 
+## Clean Code
+- Nomes que revelam intenção, em português do domínio (`Empresa.inativar()`, `AutenticarUsuario`).
+- Métodos pequenos, que fazem uma coisa só; poucos parâmetros.
+- **Entidades ricas:** regras dentro da entidade (`empresa.inativar()`), sem setters públicos no domínio. Criação por fábricas nomeadas (`Empresa.nova(...)`, `Empresa.reconstituir(...)`).
+- **Objetos de valor** para conceitos do negócio (`Cnpj`, `Email`, `Senha`, `Dinheiro`): sempre válidos desde a criação, imutáveis (`record`).
+- **Um caso de uso por classe**, com nome de ação e um método público (`executar`).
+- Exceções de domínio específicas (`CnpjInvalidoException`) estendendo `ExcecaoDeDominio`; o `TratadorGlobalDeErros` converte em JSON (RFC 7807): `ExcecaoDeDominio` → 422, `RecursoNaoEncontradoException` → 404, validação → 400.
+- Comentários explicam o *porquê*, nunca o *quê*. Sem código comentado.
+- Sem números/strings mágicos: constantes com nome.
+
 ## Convenções
-- Nomes de classes, métodos e variáveis em português, alinhados ao domínio (`Cliente`, `emitirNota`).
-- Injeção de dependência por construtor (`@RequiredArgsConstructor` + campos `final`); nunca `@Autowired` em campo.
+- Injeção de dependência sempre por construtor, campos `final`; nunca `@Autowired` em campo.
+- Lombok **só** em `infraestrutura` e `web`. Domínio e aplicação são Java puro.
 - Valores monetários sempre `BigDecimal` com escala 2; nunca `double`/`float`.
-- Datas com `java.time` (`LocalDate`, `OffsetDateTime`).
-- Validação de entrada com Bean Validation (`@NotBlank`, `@Valid`) nos DTOs.
-- Erros de negócio lançam exceções de `shared/exception`; o `@RestControllerAdvice` global converte em respostas JSON padronizadas (RFC 7807 / `ProblemDetail`).
-- `@Transactional` na camada de service, não no controller.
-- Endpoints REST em `/api/v1/<recurso>` no plural (`/api/v1/clientes`).
+- Datas com `java.time`; obter a hora atual sempre via `Clock` injetado (testável).
+- Validação de formato da entrada HTTP com Bean Validation nos records de `web`; regras de negócio ficam no domínio.
+- Endpoints REST em `/api/v1/<recurso>` no plural (`/api/v1/empresas`).
 - Commits no formato Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`).
 
 ## Testes
-- Service: teste unitário com Mockito.
-- Controller: `@WebMvcTest`.
-- Repository e fluxos completos: `@SpringBootTest` + Testcontainers.
+- **Domínio:** testes unitários puros (sem Spring, sem mocks), um por regra de negócio.
+- **Casos de uso:** testes unitários com Mockito para as portas (repositórios, serviços externos).
+- **Adaptadores, API e fluxos completos:** estender `suporte/TesteDeIntegracao` (`@SpringBootTest` + Testcontainers; banco limpo antes de cada teste).
+- **Arquitetura:** `arquitetura/ArquiteturaTest` (ArchUnit).
 - Toda funcionalidade nova ou correção de bug vem com teste.
-- Rodar `./mvnw test` antes de commitar; não commitar com testes falhando.
+- Rodar `./mvnw verify` antes de commitar; não commitar com testes falhando.
 
 ## Regras
 - Nunca editar uma migration Flyway já commitada; criar uma nova versão.
