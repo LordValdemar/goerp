@@ -1,5 +1,6 @@
 package br.com.goerp.usuario.infraestrutura.persistencia;
 
+import org.hibernate.annotations.TenantId;
 import org.hibernate.envers.Audited;
 
 import br.com.goerp.compartilhado.infraestrutura.auditoria.EntidadeJpaAuditavel;
@@ -26,6 +27,7 @@ class VinculoEmpresaJpa extends EntidadeJpaAuditavel {
     @Column(name = "usuario_id", nullable = false, updatable = false)
     private Long usuarioId;
 
+    @TenantId
     @Column(name = "empresa_id", nullable = false, updatable = false)
     private Long empresaId;
 

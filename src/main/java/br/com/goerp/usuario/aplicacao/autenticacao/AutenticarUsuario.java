@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.goerp.compartilhado.aplicacao.AcessoEntreEmpresas;
 import br.com.goerp.compartilhado.aplicacao.CasoDeUso;
 import br.com.goerp.compartilhado.dominio.Email;
 import br.com.goerp.compartilhado.dominio.excecao.ExcecaoDeDominio;
@@ -28,7 +29,9 @@ import br.com.goerp.usuario.dominio.UsuarioRepositorio;
 import br.com.goerp.usuario.dominio.VinculoEmpresa;
 import br.com.goerp.usuario.dominio.VinculoEmpresaRepositorio;
 
+/** Login. Acessa todas as empresas porque precisa descobrir a quais delas o usuário tem acesso. */
 @CasoDeUso
+@AcessoEntreEmpresas
 public class AutenticarUsuario {
 
     private final UsuarioRepositorio usuarios;

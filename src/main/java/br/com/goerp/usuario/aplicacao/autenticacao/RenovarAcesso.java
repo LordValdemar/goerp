@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.goerp.compartilhado.aplicacao.AcessoEntreEmpresas;
 import br.com.goerp.compartilhado.aplicacao.CasoDeUso;
 import br.com.goerp.empresa.aplicacao.ListarEmpresasAtivas;
 import br.com.goerp.empresa.dominio.Empresa;
@@ -28,8 +29,11 @@ import br.com.goerp.usuario.dominio.VinculoEmpresaRepositorio;
  * Troca um token de renovação válido por um novo par de tokens (rotação): o token usado é revogado.
  * Se um token já revogado for apresentado de novo, ele pode ter sido roubado; por segurança,
  * todas as sessões do usuário são encerradas.
+ *
+ * <p>Acessa todas as empresas porque roda sem usuário autenticado (o token de acesso já expirou).
  */
 @CasoDeUso
+@AcessoEntreEmpresas
 public class RenovarAcesso {
 
     private static final Recusado SESSAO_INVALIDA = new Recusado(MotivoDaRecusa.SESSAO_INVALIDA);

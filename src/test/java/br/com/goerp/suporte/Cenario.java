@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import br.com.goerp.compartilhado.dominio.Cnpj;
 import br.com.goerp.compartilhado.dominio.Email;
+import br.com.goerp.compartilhado.infraestrutura.multiempresa.ContextoDeEmpresa;
 import br.com.goerp.empresa.dominio.Empresa;
 import br.com.goerp.empresa.dominio.EmpresaRepositorio;
 import br.com.goerp.usuario.aplicacao.CodificadorDeSenha;
@@ -14,7 +15,7 @@ import br.com.goerp.usuario.dominio.VinculoEmpresa;
 import br.com.goerp.usuario.dominio.VinculoEmpresaRepositorio;
 import lombok.RequiredArgsConstructor;
 
-/** Monta dados de teste (empresas, usuários e vínculos) direto pelos repositórios. */
+/** Monta dados de teste (empresas, usuários e vínculos) direto pelos repositórios, sem filtro de empresa. */
 @Component
 @RequiredArgsConstructor
 public class Cenario {
@@ -40,6 +41,6 @@ public class Cenario {
     }
 
     public VinculoEmpresa vincular(Usuario usuario, Empresa empresa) {
-        return vinculos.salvar(VinculoEmpresa.novo(usuario.id(), empresa.id()));
+        return ContextoDeEmpresa.emTodasAsEmpresas(() -> vinculos.salvar(VinculoEmpresa.novo(usuario.id(), empresa.id())));
     }
 }

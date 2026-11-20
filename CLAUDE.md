@@ -29,7 +29,13 @@ Não começar um módulo antes do anterior estar concluído e testado.
 - **Explicar as alterações:** ao terminar cada passo, resumir o que mudou e por quê, para revisão.
 
 ## Requisitos obrigatórios do ERP
-- **Multiempresa (desde o início):** banco compartilhado com coluna `empresa_id` em toda tabela de negócio. Isolamento automático via `@TenantId` do Hibernate, com a empresa obtida do usuário autenticado. Nunca filtrar empresa manualmente nas consultas, e nunca aceitar `empresa_id` vindo do cliente da API. Todo módulo tem teste provando que a empresa A não vê dados da empresa B.
+- **Multiempresa (desde o início):** banco compartilhado com coluna `empresa_id` em toda tabela de negócio.
+  - Na entidade JPA, o campo `empresa_id` leva `@TenantId`: o Hibernate filtra toda consulta e preenche a empresa ao gravar, a partir do token do usuário (`ResolvedorDeEmpresa`).
+  - **Falha fechada:** sem empresa no token (ninguém logado, administrador da plataforma), nenhum dado de empresa é visível.
+  - Nunca filtrar empresa manualmente nas consultas, e nunca aceitar `empresa_id` vindo do cliente da API.
+  - Ver dados de todas as empresas só com `@AcessoEntreEmpresas` no caso de uso (ex.: login). Usar com parcimônia e justificar no Javadoc.
+  - O `ArquiteturaTest` falha se uma coluna `empresa_id` não tiver `@TenantId` (exceções justificadas na lista `SEM_ISOLAMENTO_POR_EMPRESA`).
+  - Todo módulo tem teste provando que a empresa A não vê nem altera dados da empresa B (modelo: `IsolamentoEntreEmpresasTest`; use `suporte/Autenticacao.comoUsuarioDaEmpresa`).
 - **Dinheiro:** sempre `BigDecimal` (`NUMERIC` no banco); nunca `double`/`float`.
 - **Transações:** operações que tocam várias tabelas/módulos (ex.: venda → estoque → financeiro) rodam em uma única transação; ou tudo grava, ou nada grava.
 - **Auditoria completa:**
@@ -124,7 +130,7 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 ## Testes
 - **Domínio:** testes unitários puros (sem Spring, sem mocks), um por regra de negócio.
 - **Casos de uso:** testes unitários com Mockito para as portas (repositórios, serviços externos).
-- **Adaptadores, API e fluxos completos:** estender `suporte/TesteDeIntegracao` (`@SpringBootTest` + Testcontainers; banco limpo antes de cada teste).
+- **Adaptadores, API e fluxos completos:** estender `suporte/TesteDeIntegracao` (`@SpringBootTest` + Testcontainers; banco limpo antes de cada teste). Dados de teste com `suporte/Cenario`; relógio controlável com `relogio.avancar(...)`.
 - **Arquitetura:** `arquitetura/ArquiteturaTest` (ArchUnit).
 - Toda funcionalidade nova ou correção de bug vem com teste.
 - Rodar `./mvnw verify` antes de commitar; não commitar com testes falhando.

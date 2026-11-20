@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.Ordered;
 import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.interceptor.MatchAlwaysTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
@@ -30,6 +31,8 @@ public class CasoDeUsoConfig {
     @Bean
     Advisor transacaoDosCasosDeUso(TransactionManager gerenciadorDeTransacao) {
         var interceptor = new TransactionInterceptor(gerenciadorDeTransacao, new MatchAlwaysTransactionAttributeSource());
-        return new DefaultPointcutAdvisor(new AnnotationMatchingPointcut(CasoDeUso.class, true), interceptor);
+        var advisor = new DefaultPointcutAdvisor(new AnnotationMatchingPointcut(CasoDeUso.class, true), interceptor);
+        advisor.setOrder(Ordered.LOWEST_PRECEDENCE);
+        return advisor;
     }
 }
