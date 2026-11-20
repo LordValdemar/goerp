@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 import org.hibernate.annotations.TenantId;
 
-import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.compartilhado.infraestrutura.auditoria.EntidadeJpaAuditavel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,7 +33,7 @@ class SaldoDeEstoqueJpa extends EntidadeJpaAuditavel {
     private Long produtoId;
 
     @Column(nullable = false)
-    private Quantidade quantidade;
+    private BigDecimal quantidade;
 
     @Column(name = "custo_medio", nullable = false)
     private BigDecimal custoMedio;

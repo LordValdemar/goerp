@@ -6,7 +6,6 @@ import java.time.Instant;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.TenantId;
 
-import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.estoque.dominio.OrigemDaMovimentacao;
 import br.com.goerp.estoque.dominio.TipoDeMovimentacao;
 import jakarta.persistence.Column;
@@ -47,13 +46,13 @@ class MovimentacaoJpa {
     private TipoDeMovimentacao tipo;
 
     @Column(nullable = false)
-    private Quantidade quantidade;
+    private BigDecimal quantidade;
 
     @Column(name = "custo_unitario", nullable = false)
     private BigDecimal custoUnitario;
 
     @Column(name = "saldo_resultante", nullable = false)
-    private Quantidade saldoResultante;
+    private BigDecimal saldoResultante;
 
     @Column(name = "custo_medio_resultante", nullable = false)
     private BigDecimal custoMedioResultante;

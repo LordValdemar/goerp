@@ -146,5 +146,9 @@ Custo médio ponderado. Movimentações do mesmo produto ao mesmo tempo esperam 
 | POST | `/api/v1/estoque/saidas` | `ESTOQUE_MOVIMENTAR` | `{produtoId, quantidade, motivo}` (consumo, doação...) |
 | POST | `/api/v1/estoque/ajustes` | `ESTOQUE_AJUSTAR` | `{produtoId, sentido: ENTRADA/SAIDA, quantidade, motivo}` |
 | POST | `/api/v1/estoque/movimentacoes/{id}/estorno` | `ESTOQUE_AJUSTAR` | `{motivo}`; cada movimentação só pode ser estornada uma vez |
+| GET | `/api/v1/estoque/saldos?busca=&aRepor=&pagina=&tamanho=` | `ESTOQUE_LER` | posição: saldo, mínimo, custo médio, valor em estoque; `aRepor=true` só o que está no mínimo ou abaixo |
 | GET | `/api/v1/estoque/saldos/{produtoId}` | `ESTOQUE_LER` | saldo e custo médio |
+| GET | `/api/v1/estoque/produtos/{produtoId}/extrato` | `ESTOQUE_LER` | extrato (kardex) paginado, do mais recente ao mais antigo, com o saldo após cada movimentação |
+| GET | `/api/v1/estoque/movimentacoes/{id}` | `ESTOQUE_LER` | uma movimentação |
+| GET | `/api/v1/estoque/conferencia` | `ESTOQUE_AJUSTAR` | recalcula os saldos pelas movimentações e aponta divergências (deve vir `consistente: true`) |
 | GET / PUT | `/api/v1/estoque/configuracao` | `ESTOQUE_LER` / `ESTOQUE_AJUSTAR` | `{permiteEstoqueNegativo}` (padrão: não) |

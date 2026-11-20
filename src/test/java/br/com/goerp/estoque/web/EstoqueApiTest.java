@@ -4,6 +4,8 @@ import static br.com.goerp.usuario.dominio.Permissao.ESTOQUE_LER;
 import static br.com.goerp.usuario.dominio.Permissao.ESTOQUE_MOVIMENTAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.contains;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -172,6 +174,93 @@ class EstoqueApiTest extends TesteDeIntegracao {
                 .andExpect(status().isForbidden());
     }
 
+    // ---------- consultas ----------
+
+    @Test
+    void posicaoMostraSaldoCustoValorEOQueRepor() throws Exception {
+        Integer arroz = produto("ARZ", "UN", true, "10");
+        entrada(adminA, arroz, "12", "20.00");
+        saida(adminA, arroz, "4");
+        entrada(adminA, queijo, "2.5", "40.00");
+
+        posicoes(adminA, "")
+                .andExpect(jsonPath("$.total").value(3))
+                .andExpect(jsonPath("$.itens[*].codigo", contains("ARZ", "QJO", "REF")))
+                .andExpect(jsonPath("$.itens[0].saldo").value(8))
+                .andExpect(jsonPath("$.itens[0].estoqueMinimo").value(10))
+                .andExpect(jsonPath("$.itens[0].precisaRepor").value(true))
+                .andExpect(jsonPath("$.itens[0].valorEmEstoque").value(160.0))
+                .andExpect(jsonPath("$.itens[1].unidade").value("KG"))
+                .andExpect(jsonPath("$.itens[1].valorEmEstoque").value(100.0))
+                .andExpect(jsonPath("$.itens[2].saldo").value(0));
+
+        posicoes(adminA, "?aRepor=true&busca=arz").andExpect(jsonPath("$.itens[*].codigo", contains("ARZ")));
+    }
+
+    @Test
+    void posicaoIgnoraServicosEProdutosInativos() throws Exception {
+        mvc.perform(delete("/api/v1/produtos/" + queijo).header("Authorization", adminA));
+
+        posicoes(adminA, "").andExpect(jsonPath("$.itens[*].codigo", contains("REF")));
+    }
+
+    @Test
+    void extratoDoMaisRecenteParaOMaisAntigoComSaldoApósCadaUm() throws Exception {
+        entrada(adminA, refrigerante, "10", "5.00");
+        saida(adminA, refrigerante, "3");
+        ajuste(adminA, refrigerante, "ENTRADA", "1", "Sobra");
+
+        mvc.perform(get("/api/v1/estoque/produtos/" + refrigerante + "/extrato?tamanho=2").header("Authorization", adminA))
+                .andExpect(jsonPath("$.total").value(3))
+                .andExpect(jsonPath("$.itens[*].tipo", contains("AJUSTE_DE_ENTRADA", "SAIDA")))
+                .andExpect(jsonPath("$.itens[*].saldoResultante", contains(8.0, 7.0)));
+    }
+
+    @Test
+    void consultaUmaMovimentacao() throws Exception {
+        Integer id = id(entrada(adminA, refrigerante, "10", "5.00"));
+
+        mvc.perform(get("/api/v1/estoque/movimentacoes/" + id).header("Authorization", adminA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantidade").value(10));
+        mvc.perform(get("/api/v1/estoque/movimentacoes/" + id).header("Authorization", adminB))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void empresaBNaoVePosicaoNemExtratoDaA() throws Exception {
+        entrada(adminA, refrigerante, "10", "5.00");
+
+        posicoes(adminB, "").andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/v1/estoque/produtos/" + refrigerante + "/extrato").header("Authorization", adminB))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void conferenciaAcusaSaldoAlteradoPorForaDoSistema() throws Exception {
+        entrada(adminA, refrigerante, "10", "5.00");
+        saida(adminA, refrigerante, "3");
+
+        conferencia(adminA).andExpect(jsonPath("$.consistente").value(true));
+
+        jdbc.update("UPDATE saldo_estoque SET quantidade = 50 WHERE produto_id = ?", refrigerante);
+
+        conferencia(adminA)
+                .andExpect(jsonPath("$.consistente").value(false))
+                .andExpect(jsonPath("$.divergencias[0].produtoId").value(refrigerante))
+                .andExpect(jsonPath("$.divergencias[0].saldoGravado").value(50))
+                .andExpect(jsonPath("$.divergencias[0].somaDasMovimentacoes").value(7));
+        conferencia(adminB).andExpect(jsonPath("$.consistente").value(true));
+    }
+
+    private ResultActions posicoes(String token, String parametros) throws Exception {
+        return mvc.perform(get("/api/v1/estoque/saldos" + parametros).header("Authorization", token));
+    }
+
+    private ResultActions conferencia(String token) throws Exception {
+        return mvc.perform(get("/api/v1/estoque/conferencia").header("Authorization", token));
+    }
+
     private ResultActions entrada(String token, Integer produto, String quantidade, String custo) throws Exception {
         return enviar("/api/v1/estoque/entradas", token, "{\"produtoId\":%d,\"quantidade\":%s,\"custoUnitario\":%s}"
                 .formatted(produto, quantidade, custo));
@@ -202,11 +291,17 @@ class EstoqueApiTest extends TesteDeIntegracao {
     }
 
     private Integer produto(String codigo, String sigla, boolean controlaEstoque) throws Exception {
+        return produto(codigo, sigla, controlaEstoque, "0");
+    }
+
+    private Integer produto(String codigo, String sigla, boolean controlaEstoque, String estoqueMinimo)
+            throws Exception {
         Long unidade = jdbc.queryForObject("SELECT id FROM unidade_medida WHERE empresa_id = ? AND sigla = ?", Long.class,
                 empresaA.id(), sigla);
         return id(enviar("/api/v1/produtos", adminA, """
                 {"codigo":"%s","descricao":"Produto %s","unidadeId":%d,"precoDeVenda":10,"ncm":"22021000",
-                 "controlaEstoque":%s}""".formatted(codigo, codigo, unidade, controlaEstoque)));
+                 "controlaEstoque":%s,"estoqueMinimo":%s}""".formatted(codigo, codigo, unidade, controlaEstoque,
+                estoqueMinimo)));
     }
 
     private String entrar(String email, String perfil) throws Exception {

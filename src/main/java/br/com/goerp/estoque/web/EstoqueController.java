@@ -1,6 +1,7 @@
 package br.com.goerp.estoque.web;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -11,11 +12,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.goerp.cadastros.produto.dominio.CustoUnitario;
 import br.com.goerp.compartilhado.dominio.Quantidade;
+import br.com.goerp.compartilhado.dominio.Paginacao;
+import br.com.goerp.compartilhado.web.PaginaResponse;
 import br.com.goerp.estoque.aplicacao.AjustarEstoque;
+import br.com.goerp.estoque.aplicacao.BuscarMovimentacao;
+import br.com.goerp.estoque.aplicacao.ConferirSaldos;
+import br.com.goerp.estoque.aplicacao.ConsultarExtrato;
+import br.com.goerp.estoque.aplicacao.ConsultarPosicaoDeEstoque;
+import br.com.goerp.estoque.aplicacao.DivergenciaDeSaldo;
+import br.com.goerp.estoque.aplicacao.FiltroDePosicoes;
 import br.com.goerp.estoque.aplicacao.ConfigurarEstoque;
 import br.com.goerp.estoque.aplicacao.ConsultarConfiguracaoDeEstoque;
 import br.com.goerp.estoque.aplicacao.ConsultarSaldo;
@@ -41,6 +51,10 @@ public class EstoqueController {
     private final ConsultarSaldo consultarSaldo;
     private final ConfigurarEstoque configurarEstoque;
     private final ConsultarConfiguracaoDeEstoque consultarConfiguracao;
+    private final ConsultarPosicaoDeEstoque consultarPosicao;
+    private final ConsultarExtrato consultarExtrato;
+    private final BuscarMovimentacao buscarMovimentacao;
+    private final ConferirSaldos conferirSaldos;
 
     @PostMapping("/entradas")
     @PreAuthorize("hasAuthority('ESTOQUE_MOVIMENTAR')")
@@ -75,6 +89,41 @@ public class EstoqueController {
     @PreAuthorize("hasAuthority('ESTOQUE_LER')")
     public SaldoResponse saldo(@PathVariable Long produtoId) {
         return SaldoResponse.de(consultarSaldo.executar(produtoId));
+    }
+
+    /** Posição de estoque; {@code aRepor=true} lista só o que está no mínimo ou abaixo. */
+    @GetMapping("/saldos")
+    @PreAuthorize("hasAuthority('ESTOQUE_LER')")
+    public PaginaResponse<PosicaoResponse> posicoes(
+            @RequestParam(required = false) String busca,
+            @RequestParam(defaultValue = "false") boolean aRepor,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanho) {
+        return PaginaResponse.de(consultarPosicao.executar(new FiltroDePosicoes(busca, aRepor),
+                new Paginacao(pagina, tamanho)), PosicaoResponse::de);
+    }
+
+    @GetMapping("/produtos/{produtoId}/extrato")
+    @PreAuthorize("hasAuthority('ESTOQUE_LER')")
+    public PaginaResponse<MovimentacaoResponse> extrato(@PathVariable Long produtoId,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanho) {
+        return PaginaResponse.de(consultarExtrato.executar(produtoId, new Paginacao(pagina, tamanho)),
+                MovimentacaoResponse::de);
+    }
+
+    @GetMapping("/movimentacoes/{id}")
+    @PreAuthorize("hasAuthority('ESTOQUE_LER')")
+    public MovimentacaoResponse movimentacao(@PathVariable Long id) {
+        return MovimentacaoResponse.de(buscarMovimentacao.executar(id));
+    }
+
+    /** Recalcula os saldos pelas movimentações; {@code consistente=false} indica alteração por fora do sistema. */
+    @GetMapping("/conferencia")
+    @PreAuthorize("hasAuthority('ESTOQUE_AJUSTAR')")
+    public Map<String, Object> conferencia() {
+        List<DivergenciaDeSaldo> divergencias = conferirSaldos.executar();
+        return Map.of("consistente", divergencias.isEmpty(), "divergencias", divergencias);
     }
 
     @GetMapping("/configuracao")

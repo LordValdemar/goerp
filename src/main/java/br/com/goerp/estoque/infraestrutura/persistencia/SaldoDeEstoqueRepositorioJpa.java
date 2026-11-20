@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 import br.com.goerp.cadastros.produto.dominio.CustoUnitario;
+import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.estoque.dominio.SaldoDeEstoque;
 import br.com.goerp.estoque.dominio.SaldoDeEstoqueRepositorio;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ class SaldoDeEstoqueRepositorioJpa implements SaldoDeEstoqueRepositorio {
     @Override
     public void salvar(SaldoDeEstoque saldo) {
         SaldoDeEstoqueJpa registro = jpa.findByProdutoId(saldo.produtoId()).orElseThrow();
-        registro.setQuantidade(saldo.quantidade());
+        registro.setQuantidade(saldo.quantidade().valor());
         registro.setCustoMedio(saldo.custoMedio().valor());
     }
 
@@ -35,6 +36,6 @@ class SaldoDeEstoqueRepositorioJpa implements SaldoDeEstoqueRepositorio {
 
     private static SaldoDeEstoque paraDominio(SaldoDeEstoqueJpa registro) {
         return SaldoDeEstoque.reconstituir(registro.getId(), registro.getEmpresaId(), registro.getProdutoId(),
-                registro.getQuantidade(), new CustoUnitario(registro.getCustoMedio()));
+                new Quantidade(registro.getQuantidade()), new CustoUnitario(registro.getCustoMedio()));
     }
 }
