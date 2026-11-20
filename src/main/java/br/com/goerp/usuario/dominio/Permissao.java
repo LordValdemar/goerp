@@ -10,7 +10,9 @@ public enum Permissao {
     PERFIL_LER("Consultar perfis de acesso"),
     PERFIL_GERENCIAR("Cadastrar, alterar e inativar perfis de acesso"),
     CLIENTE_LER("Consultar clientes"),
-    CLIENTE_GERENCIAR("Cadastrar, alterar e inativar clientes");
+    CLIENTE_GERENCIAR("Cadastrar, alterar e inativar clientes"),
+    FORNECEDOR_LER("Consultar fornecedores"),
+    FORNECEDOR_GERENCIAR("Cadastrar, alterar e inativar fornecedores");
 
     private final String descricao;
 

@@ -109,3 +109,7 @@ Todas exigem a permissão `PLATAFORMA_ADMINISTRAR`.
 | PUT | `/api/v1/clientes/{id}` | altera; envie a `versao` lida (se outra pessoa alterou antes, responde **409**) |
 | DELETE | `/api/v1/clientes/{id}` | inativa |
 | POST | `/api/v1/clientes/{id}/reativar` | reativa |
+
+### Fornecedores (`FORNECEDOR_LER` / `FORNECEDOR_GERENCIAR`)
+
+Mesmas rotas e regras dos clientes, em `/api/v1/fornecedores`. A pesquisa também procura pela pessoa de contato.
