@@ -33,13 +33,3 @@ A API sobe em http://localhost:8080. Health check: http://localhost:8080/actuato
 ```
 
 Os testes de integração usam Testcontainers, então o Docker precisa estar rodando.
-
-## Endpoints disponíveis
-
-| Método | Rota | Descrição |
-|---|---|---|
-| GET | `/api/v1/clientes` | Lista paginada (`?page=0&size=20&sort=nome`) |
-| GET | `/api/v1/clientes/{id}` | Busca por id |
-| POST | `/api/v1/clientes` | Cria cliente |
-| PUT | `/api/v1/clientes/{id}` | Atualiza cliente |
-| DELETE | `/api/v1/clientes/{id}` | Inativa cliente |
