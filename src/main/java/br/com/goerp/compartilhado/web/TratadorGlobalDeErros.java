@@ -6,11 +6,13 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import br.com.goerp.compartilhado.dominio.excecao.ConflitoDeEdicaoException;
 import br.com.goerp.compartilhado.dominio.excecao.ExcecaoDeDominio;
 import br.com.goerp.compartilhado.dominio.excecao.RecursoNaoEncontradoException;
 
@@ -26,6 +28,18 @@ public class TratadorGlobalDeErros {
     @ExceptionHandler(ExcecaoDeDominio.class)
     public ProblemDetail regraDeNegocioViolada(ExcecaoDeDominio ex) {
         return problema(HttpStatus.UNPROCESSABLE_ENTITY, "Regra de negócio violada", ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflitoDeEdicaoException.class)
+    public ProblemDetail conflitoDeEdicao(ConflitoDeEdicaoException ex) {
+        return problema(HttpStatus.CONFLICT, "Conflito de edição", ex.getMessage());
+    }
+
+    /** Duas gravações simultâneas do mesmo registro: a segunda perde, em vez de sobrescrever a primeira. */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail gravacaoSimultanea(ObjectOptimisticLockingFailureException ex) {
+        return problema(HttpStatus.CONFLICT, "Conflito de edição",
+                "O registro foi alterado por outra pessoa ao mesmo tempo; recarregue e tente de novo");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
