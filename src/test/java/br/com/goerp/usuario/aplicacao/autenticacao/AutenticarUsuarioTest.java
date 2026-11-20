@@ -183,7 +183,7 @@ class AutenticarUsuarioTest {
 
     private void acessoAs(Empresa... empresas) {
         List<VinculoEmpresa> lista = java.util.Arrays.stream(empresas)
-                .map(e -> VinculoEmpresa.reconstituir(e.id(), maria.id(), e.id(), true))
+                .map(e -> VinculoEmpresa.reconstituir(e.id(), maria.id(), e.id(), 1L, true))
                 .toList();
         when(vinculos.listarDoUsuario(maria.id())).thenReturn(lista);
         when(listarEmpresasAtivas.executar(anyCollection())).thenReturn(List.of(empresas));

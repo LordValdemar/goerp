@@ -32,6 +32,7 @@ class IsolamentoEntreEmpresasTest extends TesteDeIntegracao {
     Empresa empresaB;
     Usuario contador;
     VinculoEmpresa vinculoNaB;
+    Long perfilA;
 
     @BeforeEach
     void prepararDuasEmpresasComOMesmoUsuario() {
@@ -40,6 +41,7 @@ class IsolamentoEntreEmpresasTest extends TesteDeIntegracao {
         contador = cenario.usuario("contador@exemplo.com");
         cenario.vincular(contador, empresaA);
         vinculoNaB = cenario.vincular(contador, empresaB);
+        perfilA = cenario.administradorDa(empresaA).id();
     }
 
     @Test
@@ -71,7 +73,7 @@ class IsolamentoEntreEmpresasTest extends TesteDeIntegracao {
         Usuario outro = cenario.usuario("outro@exemplo.com");
 
         assertThatThrownBy(() -> comoUsuarioDaEmpresa(empresaA.id(),
-                () -> vinculos.salvar(VinculoEmpresa.novo(outro.id(), empresaB.id()))))
+                () -> vinculos.salvar(VinculoEmpresa.novo(outro.id(), empresaB.id(), cenario.administradorDa(empresaB).id()))))
                 .isInstanceOf(RuntimeException.class);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM usuario_empresa WHERE usuario_id = ?", Integer.class,
                 outro.id())).isZero();
@@ -81,7 +83,7 @@ class IsolamentoEntreEmpresasTest extends TesteDeIntegracao {
     void registroCriadoNaEmpresaARecebeAEmpresaAutomaticamente() {
         Usuario novo = cenario.usuario("novo@exemplo.com");
 
-        comoUsuarioDaEmpresa(empresaA.id(), () -> vinculos.salvar(VinculoEmpresa.novo(novo.id(), empresaA.id())));
+        comoUsuarioDaEmpresa(empresaA.id(), () -> vinculos.salvar(VinculoEmpresa.novo(novo.id(), empresaA.id(), perfilA)));
 
         assertThat(jdbc.queryForObject("SELECT empresa_id FROM usuario_empresa WHERE usuario_id = ?", Long.class,
                 novo.id())).isEqualTo(empresaA.id());
@@ -108,7 +110,7 @@ class IsolamentoEntreEmpresasTest extends TesteDeIntegracao {
     void historicoDeAuditoriaRegistraAEmpresa() {
         Usuario novo = cenario.usuario("novo@exemplo.com");
 
-        comoUsuarioDaEmpresa(empresaA.id(), () -> vinculos.salvar(VinculoEmpresa.novo(novo.id(), empresaA.id())));
+        comoUsuarioDaEmpresa(empresaA.id(), () -> vinculos.salvar(VinculoEmpresa.novo(novo.id(), empresaA.id(), perfilA)));
 
         assertThat(jdbc.queryForObject("""
                 SELECT r.empresa_id FROM usuario_empresa_aud a JOIN revisao r ON r.id = a.rev

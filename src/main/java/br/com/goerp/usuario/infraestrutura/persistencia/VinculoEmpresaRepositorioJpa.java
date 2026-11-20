@@ -21,6 +21,7 @@ class VinculoEmpresaRepositorioJpa implements VinculoEmpresaRepositorio {
         VinculoEmpresaJpa registro = vinculo.id() == null ? new VinculoEmpresaJpa() : buscarRegistro(vinculo.id());
         registro.setUsuarioId(vinculo.usuarioId());
         registro.setEmpresaId(vinculo.empresaId());
+        registro.setPerfilId(vinculo.perfilId());
         registro.setAtivo(vinculo.ativo());
         return paraDominio(jpa.save(registro));
     }
@@ -37,12 +38,17 @@ class VinculoEmpresaRepositorioJpa implements VinculoEmpresaRepositorio {
                 .toList();
     }
 
+    @Override
+    public boolean existeAtivoComPerfil(Long perfilId) {
+        return jpa.existsByPerfilIdAndAtivoTrue(perfilId);
+    }
+
     private VinculoEmpresaJpa buscarRegistro(Long id) {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo", id));
     }
 
     private static VinculoEmpresa paraDominio(VinculoEmpresaJpa registro) {
         return VinculoEmpresa.reconstituir(registro.getId(), registro.getUsuarioId(), registro.getEmpresaId(),
-                registro.isAtivo());
+                registro.getPerfilId(), registro.isAtivo());
     }
 }

@@ -1,6 +1,9 @@
 package br.com.goerp.usuario.aplicacao.autenticacao;
 
-/** Permissões especiais do sistema. As permissões por perfil de empresa vêm no passo de perfis. */
+/**
+ * Permissões especiais, fora dos perfis de empresa. As permissões de empresa estão em
+ * {@link br.com.goerp.usuario.dominio.Permissao}.
+ */
 public final class Permissoes {
 
     public static final String ADMINISTRAR_PLATAFORMA = "PLATAFORMA_ADMINISTRAR";

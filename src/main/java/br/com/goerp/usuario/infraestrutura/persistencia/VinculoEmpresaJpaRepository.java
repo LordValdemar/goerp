@@ -10,4 +10,6 @@ interface VinculoEmpresaJpaRepository extends JpaRepository<VinculoEmpresaJpa, L
     Optional<VinculoEmpresaJpa> findByUsuarioIdAndEmpresaId(Long usuarioId, Long empresaId);
 
     List<VinculoEmpresaJpa> findByUsuarioIdOrderByEmpresaId(Long usuarioId);
+
+    boolean existsByPerfilIdAndAtivoTrue(Long perfilId);
 }

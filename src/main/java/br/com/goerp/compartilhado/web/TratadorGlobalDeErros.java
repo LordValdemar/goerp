@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +33,12 @@ public class TratadorGlobalDeErros {
         ProblemDetail problema = problema(HttpStatus.BAD_REQUEST, "Erro de validação", "Dados inválidos");
         problema.setProperty("campos", errosPorCampo(ex));
         return problema;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail corpoIlegivel(HttpMessageNotReadableException ex) {
+        return problema(HttpStatus.BAD_REQUEST, "Requisição inválida",
+                "O corpo da requisição não pôde ser lido (JSON malformado ou valor inválido)");
     }
 
     private static Map<String, String> errosPorCampo(MethodArgumentNotValidException ex) {

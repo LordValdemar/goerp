@@ -56,7 +56,7 @@ class RenovarAcessoTest {
         maria = Usuario.reconstituir(1L, "Maria", Email.de("maria@exemplo.com"), new SenhaCriptografada("h"), false,
                 true, ControleDeAcesso.livre());
         when(usuarios.buscarPorId(1L)).thenReturn(Optional.of(maria));
-        when(vinculos.buscar(1L, 10L)).thenReturn(Optional.of(VinculoEmpresa.reconstituir(5L, 1L, 10L, true)));
+        when(vinculos.buscar(1L, 10L)).thenReturn(Optional.of(VinculoEmpresa.reconstituir(5L, 1L, 10L, 1L, true)));
         when(listarEmpresasAtivas.executar(List.of(10L))).thenReturn(List.of(EMPRESA));
         when(emissor.emitir(any(), any())).thenReturn(TOKENS);
     }
@@ -96,7 +96,7 @@ class RenovarAcessoTest {
     @Test
     void vinculoInativadoImpedeARenovacao() {
         sessao(AGORA.minus(Duration.ofDays(1)));
-        when(vinculos.buscar(1L, 10L)).thenReturn(Optional.of(VinculoEmpresa.reconstituir(5L, 1L, 10L, false)));
+        when(vinculos.buscar(1L, 10L)).thenReturn(Optional.of(VinculoEmpresa.reconstituir(5L, 1L, 10L, 1L, false)));
 
         assertThat(renovar.executar(TOKEN)).isEqualTo(SESSAO_INVALIDA);
     }

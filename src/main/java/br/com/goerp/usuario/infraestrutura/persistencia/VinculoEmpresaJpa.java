@@ -31,6 +31,9 @@ class VinculoEmpresaJpa extends EntidadeJpaAuditavel {
     @Column(name = "empresa_id", nullable = false, updatable = false)
     private Long empresaId;
 
+    @Column(name = "perfil_id", nullable = false)
+    private Long perfilId;
+
     @Column(nullable = false)
     private boolean ativo;
 }

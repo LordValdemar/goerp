@@ -10,4 +10,6 @@ public interface VinculoEmpresaRepositorio {
     Optional<VinculoEmpresa> buscar(Long usuarioId, Long empresaId);
 
     List<VinculoEmpresa> listarDoUsuario(Long usuarioId);
+
+    boolean existeAtivoComPerfil(Long perfilId);
 }

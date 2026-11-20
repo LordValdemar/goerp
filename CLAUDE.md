@@ -43,7 +43,11 @@ Não começar um módulo antes do anterior estar concluído e testado.
   - entidades de negócio são `@Audited` (Hibernate Envers): cada alteração gera uma versão com usuário, empresa e data/hora;
   - nunca apagar registros de negócio; inativar.
 - **Transação:** garantida pela anotação `@CasoDeUso` (cada caso de uso é uma transação).
-- **Permissões por usuário:** todo endpoint exige autenticação e uma permissão específica (`@PreAuthorize`); não existe endpoint de negócio público.
+- **Permissões por usuário:** todo endpoint exige autenticação e uma permissão específica (`@PreAuthorize("hasAuthority('XXX')")`); não existe endpoint de negócio público.
+  - Permissões ficam no enum `usuario.dominio.Permissao` (cada módulo acrescenta as suas, ex.: `PRODUTO_LER`, `PRODUTO_GERENCIAR`).
+  - Cada empresa monta seus perfis; o vínculo usuário-empresa aponta para um perfil; o token carrega as permissões do perfil (mudanças valem na próxima renovação, até 15 min).
+  - O perfil Administrador de cada empresa tem sempre todas as permissões e não pode ser alterado nem inativado.
+  - O `ArquiteturaTest` falha se um endpoint não tiver `@PreAuthorize` ou citar permissão inexistente.
 - **Backups automáticos** do PostgreSQL configurados no ambiente.
 - **Fiscal:** integrar com uma API de emissão especializada (NF-e/NFC-e) em vez de implementar do zero; regras tributárias validadas com um contador.
 
