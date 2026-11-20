@@ -12,16 +12,19 @@ import org.springframework.transaction.interceptor.MatchAlwaysTransactionAttribu
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 import br.com.goerp.compartilhado.aplicacao.CasoDeUso;
+import br.com.goerp.compartilhado.aplicacao.ServicoDeAplicacao;
 
 /**
  * Liga os casos de uso ao Spring sem que eles conheçam o Spring:
- * registra toda classe {@link CasoDeUso} como bean e envolve suas chamadas em uma transação.
+ * registra as classes {@link CasoDeUso} e {@link ServicoDeAplicacao} como beans e envolve as chamadas
+ * de cada caso de uso em uma transação.
  */
 @Configuration
 @ComponentScan(
         basePackages = "br.com.goerp",
         useDefaultFilters = false,
-        includeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = CasoDeUso.class))
+        includeFilters = @ComponentScan.Filter(
+                type = FilterType.ANNOTATION, classes = {CasoDeUso.class, ServicoDeAplicacao.class}))
 public class CasoDeUsoConfig {
 
     @Bean

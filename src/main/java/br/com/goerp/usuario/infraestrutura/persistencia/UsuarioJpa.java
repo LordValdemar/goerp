@@ -1,5 +1,7 @@
 package br.com.goerp.usuario.infraestrutura.persistencia;
 
+import java.time.Instant;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
@@ -41,4 +43,13 @@ class UsuarioJpa extends EntidadeJpaAuditavel {
 
     @Column(nullable = false)
     private boolean ativo;
+
+    /** Controle de login: muda a cada tentativa e já é registrado nos eventos de segurança. */
+    @NotAudited
+    @Column(name = "tentativas_falhas", nullable = false)
+    private int tentativasFalhas;
+
+    @NotAudited
+    @Column(name = "bloqueado_ate")
+    private Instant bloqueadoAte;
 }

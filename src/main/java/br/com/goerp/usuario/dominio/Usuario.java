@@ -2,6 +2,7 @@ package br.com.goerp.usuario.dominio;
 
 import static br.com.goerp.compartilhado.dominio.Textos.obrigatorio;
 
+import java.time.Instant;
 import java.util.Objects;
 
 import br.com.goerp.compartilhado.dominio.Email;
@@ -18,29 +19,43 @@ public class Usuario {
     private String nome;
     private SenhaCriptografada senha;
     private boolean ativo;
+    private ControleDeAcesso controleDeAcesso;
 
     private Usuario(Long id, String nome, Email email, SenhaCriptografada senha,
-            boolean administradorDaPlataforma, boolean ativo) {
+            boolean administradorDaPlataforma, boolean ativo, ControleDeAcesso controleDeAcesso) {
         this.id = id;
         this.email = Objects.requireNonNull(email, "email");
         this.senha = Objects.requireNonNull(senha, "senha");
         this.administradorDaPlataforma = administradorDaPlataforma;
         this.ativo = ativo;
+        this.controleDeAcesso = Objects.requireNonNull(controleDeAcesso, "controleDeAcesso");
         renomear(nome);
     }
 
     public static Usuario novo(String nome, Email email, SenhaCriptografada senha) {
-        return new Usuario(null, nome, email, senha, false, true);
+        return new Usuario(null, nome, email, senha, false, true, ControleDeAcesso.livre());
     }
 
     /** Administrador geral do sistema: cadastra empresas, não pertence a nenhuma. */
     public static Usuario novoAdministradorDaPlataforma(String nome, Email email, SenhaCriptografada senha) {
-        return new Usuario(null, nome, email, senha, true, true);
+        return new Usuario(null, nome, email, senha, true, true, ControleDeAcesso.livre());
     }
 
     public static Usuario reconstituir(Long id, String nome, Email email, SenhaCriptografada senha,
-            boolean administradorDaPlataforma, boolean ativo) {
-        return new Usuario(id, nome, email, senha, administradorDaPlataforma, ativo);
+            boolean administradorDaPlataforma, boolean ativo, ControleDeAcesso controleDeAcesso) {
+        return new Usuario(id, nome, email, senha, administradorDaPlataforma, ativo, controleDeAcesso);
+    }
+
+    public boolean estaBloqueado(Instant agora) {
+        return controleDeAcesso.bloqueadoEm(agora);
+    }
+
+    public void registrarFalhaDeLogin(Instant agora) {
+        controleDeAcesso = controleDeAcesso.comFalhaEm(agora);
+    }
+
+    public void registrarLoginComSucesso() {
+        controleDeAcesso = ControleDeAcesso.livre();
     }
 
     public void renomear(String nome) {
@@ -81,5 +96,9 @@ public class Usuario {
 
     public boolean ativo() {
         return ativo;
+    }
+
+    public ControleDeAcesso controleDeAcesso() {
+        return controleDeAcesso;
     }
 }

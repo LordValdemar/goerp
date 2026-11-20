@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import br.com.goerp.compartilhado.dominio.Email;
 import br.com.goerp.compartilhado.dominio.excecao.RecursoNaoEncontradoException;
+import br.com.goerp.usuario.dominio.ControleDeAcesso;
 import br.com.goerp.usuario.dominio.SenhaCriptografada;
 import br.com.goerp.usuario.dominio.Usuario;
 import br.com.goerp.usuario.dominio.UsuarioRepositorio;
@@ -49,11 +50,13 @@ class UsuarioRepositorioJpa implements UsuarioRepositorio {
         registro.setSenhaHash(usuario.senha().hash());
         registro.setAdministradorDaPlataforma(usuario.administradorDaPlataforma());
         registro.setAtivo(usuario.ativo());
+        registro.setTentativasFalhas(usuario.controleDeAcesso().tentativasFalhas());
+        registro.setBloqueadoAte(usuario.controleDeAcesso().bloqueadoAte());
     }
 
     private static Usuario paraDominio(UsuarioJpa registro) {
         return Usuario.reconstituir(registro.getId(), registro.getNome(), registro.getEmail(),
                 new SenhaCriptografada(registro.getSenhaHash()), registro.isAdministradorDaPlataforma(),
-                registro.isAtivo());
+                registro.isAtivo(), new ControleDeAcesso(registro.getTentativasFalhas(), registro.getBloqueadoAte()));
     }
 }

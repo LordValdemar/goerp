@@ -71,10 +71,10 @@ src/main/java/br/com/goerp/
 ├── GoErpApplication.java
 ├── compartilhado/                # o que é comum a todos os módulos (mesmas camadas)
 │   ├── dominio/                  # Cnpj, Textos, exceções de domínio
-│   ├── aplicacao/                # @CasoDeUso
+│   ├── aplicacao/                # @CasoDeUso, @ServicoDeAplicacao (auxiliar reutilizado por casos de uso)
 │   ├── infraestrutura/           # auditoria (Envers), segurança, transação, conversores JPA
 │   └── web/                      # TratadorGlobalDeErros
-└── <modulo>/                     # empresa, usuario, autenticacao, cadastros, estoque, ...
+└── <modulo>/                     # empresa, usuario (inclui autenticação), cadastros, estoque, ...
     ├── dominio/                  # entidades e objetos de valor PUROS + interfaces de repositório
     ├── aplicacao/                # casos de uso (uma classe por caso) + portas para serviços externos
     ├── infraestrutura/           # adaptadores: persistencia/ (XxxJpa, XxxJpaRepository, XxxRepositorioJpa), JWT, BCrypt...
@@ -115,7 +115,8 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 - Injeção de dependência sempre por construtor, campos `final`; nunca `@Autowired` em campo.
 - Lombok **só** em `infraestrutura` e `web`. Domínio e aplicação são Java puro.
 - Valores monetários sempre `BigDecimal` com escala 2; nunca `double`/`float`.
-- Datas com `java.time`; obter a hora atual sempre via `Clock` injetado (testável).
+- Datas com `java.time`; obter a hora atual sempre via `Clock` injetado (testável; avança em microssegundos, a precisão do PostgreSQL).
+- Resultados esperados de uma operação (ex.: login recusado) são retornados como valor (`sealed interface`), não como exceção — assim a transação confirma o que precisa ficar registrado.
 - Validação de formato da entrada HTTP com Bean Validation nos records de `web`; regras de negócio ficam no domínio.
 - Endpoints REST em `/api/v1/<recurso>` no plural (`/api/v1/empresas`).
 - Commits no formato Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`).
@@ -131,5 +132,5 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 ## Regras
 - Nunca editar uma migration Flyway já commitada; criar uma nova versão.
 - `spring.jpa.hibernate.ddl-auto` fica em `validate`; o schema é responsabilidade do Flyway.
-- Nunca commitar credenciais; usar variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`).
+- Nunca commitar credenciais; usar variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 - Não adicionar dependências novas no `pom.xml` sem necessidade clara.

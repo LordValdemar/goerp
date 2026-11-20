@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Base dos testes de integração: sobe a aplicação inteira contra um PostgreSQL real
  * (Testcontainers) e começa cada teste com o banco vazio.
  */
-@SpringBootTest
+@SpringBootTest(properties = "goerp.seguranca.segredo-jwt=segredo-de-teste-com-mais-de-32-caracteres")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 public abstract class TesteDeIntegracao {
@@ -19,8 +19,12 @@ public abstract class TesteDeIntegracao {
     @Autowired
     protected JdbcTemplate jdbc;
 
+    @Autowired
+    protected RelogioAjustavel relogio;
+
     @BeforeEach
     void limparBanco() {
+        relogio.voltarParaAgora();
         String tabelas = String.join(", ", jdbc.queryForList("""
                 SELECT tablename FROM pg_tables
                 WHERE schemaname = 'public' AND tablename <> 'flyway_schema_history'

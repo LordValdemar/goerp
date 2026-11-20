@@ -1,5 +1,7 @@
 package br.com.goerp.empresa.infraestrutura.persistencia;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -32,6 +34,16 @@ class EmpresaRepositorioJpa implements EmpresaRepositorio {
     @Override
     public boolean existeComCnpj(Cnpj cnpj) {
         return jpa.existsByCnpj(cnpj);
+    }
+
+    @Override
+    public List<Empresa> listarAtivasPorIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jpa.findByIdInAndAtivaTrueOrderByRazaoSocial(ids).stream()
+                .map(EmpresaRepositorioJpa::paraDominio)
+                .toList();
     }
 
     private EmpresaJpa buscarRegistro(Long id) {
