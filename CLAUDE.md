@@ -10,9 +10,40 @@ Sistema ERP para pequenas e médias empresas.
 - **financeiro** – contas a pagar/receber, caixa e bancos, fluxo de caixa
 - **fiscal** – emissão de NF-e/NFC-e, regras de tributação (ICMS, IPI, PIS, COFINS), NCM/CFOP
 
+## Ordem de implementação
+1. Login, usuários, empresas e permissões
+2. Cadastros (clientes, fornecedores, produtos)
+3. Estoque
+4. Vendas / PDV
+5. Compras
+6. Financeiro (contas a pagar e receber, caixa)
+7. Fiscal
+8. Relatórios e dashboards
+
+Não começar um módulo antes do anterior estar concluído e testado.
+
+## Forma de trabalho
+- **Planejar antes de codar:** para cada funcionalidade nova, apresentar o plano primeiro e só implementar após aprovação explícita.
+- **Tarefas pequenas:** uma funcionalidade por vez, com um commit a cada passo que funciona (`./mvnw verify` verde).
+- **Testes sempre:** toda regra de negócio tem teste automatizado.
+- **Explicar as alterações:** ao terminar cada passo, resumir o que mudou e por quê, para revisão.
+
+## Requisitos obrigatórios do ERP
+- **Multiempresa (desde o início):** banco compartilhado com coluna `empresa_id` em toda tabela de negócio. Isolamento automático via `@TenantId` do Hibernate, com a empresa obtida do usuário autenticado. Nunca filtrar empresa manualmente nas consultas, e nunca aceitar `empresa_id` vindo do cliente da API. Todo módulo tem teste provando que a empresa A não vê dados da empresa B.
+- **Dinheiro:** sempre `BigDecimal` (`NUMERIC` no banco); nunca `double`/`float`.
+- **Transações:** operações que tocam várias tabelas/módulos (ex.: venda → estoque → financeiro) rodam em uma única transação; ou tudo grava, ou nada grava.
+- **Auditoria completa:**
+  - toda entidade tem `criado_em`, `criado_por`, `atualizado_em`, `atualizado_por` (Spring Data Auditing);
+  - entidades de negócio são `@Audited` (Hibernate Envers): cada alteração gera uma versão com usuário, empresa e data/hora;
+  - nunca apagar registros de negócio; inativar.
+- **Permissões por usuário:** todo endpoint exige autenticação e uma permissão específica (`@PreAuthorize`); não existe endpoint de negócio público.
+- **Backups automáticos** do PostgreSQL configurados no ambiente.
+- **Fiscal:** integrar com uma API de emissão especializada (NF-e/NFC-e) em vez de implementar do zero; regras tributárias validadas com um contador.
+
 ## Stack
 - Java 21
 - Spring Boot 3 (Web, Data JPA, Validation, Security)
+- Autenticação com JWT; Hibernate Envers para histórico de auditoria
 - Maven (usar sempre o wrapper `./mvnw`)
 - PostgreSQL 16; migrations com Flyway
 - Testes: JUnit 5, Mockito, Spring Boot Test, Testcontainers (PostgreSQL)
