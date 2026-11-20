@@ -84,6 +84,7 @@ src/main/java/br/com/goerp/
 │   ├── aplicacao/                # @CasoDeUso, @ServicoDeAplicacao (auxiliar reutilizado por casos de uso)
 │   ├── infraestrutura/           # auditoria (Envers), segurança, transação, conversores JPA
 │   └── web/                      # TratadorGlobalDeErros
+├── plataforma/                   # coordena empresa + usuario (cadastro de empresas pelo admin da plataforma)
 └── <modulo>/                     # empresa, usuario (inclui autenticação), cadastros, estoque, ...
     ├── dominio/                  # entidades e objetos de valor PUROS + interfaces de repositório
     ├── aplicacao/                # casos de uso (uma classe por caso) + portas para serviços externos
@@ -103,7 +104,7 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 - Entidades JPA estendem `EntidadeJpaAuditavel` (criado/atualizado em/por) e são `@Audited`.
 - Classes JPA e Spring Data são package-private dentro de `infraestrutura/persistencia`.
 - Casos de uso são anotados com `@CasoDeUso` (anotação nossa, sem Spring). A infraestrutura registra como bean e **executa cada chamada em uma transação** — não usar `@Transactional` em casos de uso, controllers ou domínio.
-- Um módulo usa outro chamando seus casos de uso, nunca o repositório alheio.
+- Um módulo usa outro chamando seus casos de uso, nunca o repositório alheio. Sem dependência circular entre módulos: quando dois módulos precisam ser coordenados, o caso de uso coordenador fica num módulo acima deles (ex.: `plataforma`).
 
 **Fluxos entre módulos:**
 - venda/PDV → baixa no estoque + conta a receber + documento fiscal;
@@ -142,5 +143,5 @@ src/main/resources/db/migration/  # scripts Flyway: V1__descricao.sql, V2__...
 ## Regras
 - Nunca editar uma migration Flyway já commitada; criar uma nova versão.
 - `spring.jpa.hibernate.ddl-auto` fica em `validate`; o schema é responsabilidade do Flyway.
-- Nunca commitar credenciais; usar variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
+- Nunca commitar credenciais; usar variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `GOERP_ADMIN_*`).
 - Não adicionar dependências novas no `pom.xml` sem necessidade clara.

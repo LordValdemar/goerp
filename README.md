@@ -26,6 +26,16 @@ JWT_SECRET=uma-chave-de-pelo-menos-32-caracteres ./mvnw spring-boot:run
 
 A API sobe em http://localhost:8080. Health check: http://localhost:8080/actuator/health
 
+## Primeiro acesso
+
+1. Defina no `.env` as variáveis `GOERP_ADMIN_EMAIL` e `GOERP_ADMIN_SENHA` (e opcionalmente `GOERP_ADMIN_NOME`).
+2. Na primeira inicialização é criado o **administrador da plataforma** (se ainda não existir; nas seguintes, nada muda).
+3. Entre com ele (`POST /api/v1/autenticacao/login`) e **troque a senha** (`POST /api/v1/autenticacao/senha`).
+4. Cadastre as empresas clientes em `POST /api/v1/empresas`, informando o primeiro administrador de cada uma.
+   A empresa já nasce com o perfil Administrador e esse usuário com acesso total a ela.
+
+O administrador da plataforma gerencia empresas, mas **não enxerga os dados internos** delas.
+
 ## Testes
 
 ```bash
@@ -59,3 +69,15 @@ Demais rotas exigem o cabeçalho `Authorization: Bearer <tokenDeAcesso>`.
 | GET | `/api/v1/perfis`, `/api/v1/perfis/{id}` | `PERFIL_LER` | perfis da empresa |
 | POST/PUT/DELETE | `/api/v1/perfis[/{id}]` | `PERFIL_GERENCIAR` | cria, altera, inativa perfil |
 | GET | `/api/v1/permissoes` | `PERFIL_LER` | catálogo de permissões |
+
+## Empresas (administrador da plataforma)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/v1/empresas` | `{cnpj, razaoSocial, nomeFantasia, administrador:{nome, email, senha}}` cria a empresa pronta para uso |
+| GET | `/api/v1/empresas`, `/api/v1/empresas/{id}` | consulta |
+| PUT | `/api/v1/empresas/{id}` | `{razaoSocial, nomeFantasia}` (o CNPJ não muda) |
+| DELETE | `/api/v1/empresas/{id}` | inativa: ninguém entra nem renova sessão nela |
+| POST | `/api/v1/empresas/{id}/reativar` | reativa |
+
+Todas exigem a permissão `PLATAFORMA_ADMINISTRAR`.

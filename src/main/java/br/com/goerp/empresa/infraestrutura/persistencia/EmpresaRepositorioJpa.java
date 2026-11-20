@@ -46,6 +46,11 @@ class EmpresaRepositorioJpa implements EmpresaRepositorio {
                 .toList();
     }
 
+    @Override
+    public List<Empresa> listarTodas() {
+        return jpa.findAllByOrderByRazaoSocial().stream().map(EmpresaRepositorioJpa::paraDominio).toList();
+    }
+
     private EmpresaJpa buscarRegistro(Long id) {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Empresa", id));
     }

@@ -17,4 +17,6 @@ public interface UsuarioRepositorio {
     boolean existeComEmail(Email email);
 
     List<Usuario> buscarPorIds(Collection<Long> ids);
+
+    boolean existeAdministradorDaPlataforma();
 }

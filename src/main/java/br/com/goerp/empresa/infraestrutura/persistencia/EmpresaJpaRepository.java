@@ -12,4 +12,6 @@ interface EmpresaJpaRepository extends JpaRepository<EmpresaJpa, Long> {
     boolean existsByCnpj(Cnpj cnpj);
 
     List<EmpresaJpa> findByIdInAndAtivaTrueOrderByRazaoSocial(Collection<Long> ids);
+
+    List<EmpresaJpa> findAllByOrderByRazaoSocial();
 }

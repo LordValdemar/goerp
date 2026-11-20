@@ -35,3 +35,8 @@ goerp:
     segredo-jwt: ${JWT_SECRET:}
     validade-do-acesso: 15m
     validade-da-renovacao: 7d
+  plataforma:
+    administrador:
+      nome: ${GOERP_ADMIN_NOME:}
+      email: ${GOERP_ADMIN_EMAIL:}
+      senha: ${GOERP_ADMIN_SENHA:}

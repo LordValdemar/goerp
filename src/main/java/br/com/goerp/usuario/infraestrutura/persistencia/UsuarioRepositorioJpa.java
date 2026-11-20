@@ -47,6 +47,11 @@ class UsuarioRepositorioJpa implements UsuarioRepositorio {
         return jpa.findAllById(ids).stream().map(UsuarioRepositorioJpa::paraDominio).toList();
     }
 
+    @Override
+    public boolean existeAdministradorDaPlataforma() {
+        return jpa.existsByAdministradorDaPlataformaTrue();
+    }
+
     private UsuarioJpa buscarRegistro(Long id) {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário", id));
     }

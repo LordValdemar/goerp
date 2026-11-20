@@ -15,4 +15,6 @@ public interface EmpresaRepositorio {
     boolean existeComCnpj(Cnpj cnpj);
 
     List<Empresa> listarAtivasPorIds(Collection<Long> ids);
+
+    List<Empresa> listarTodas();
 }

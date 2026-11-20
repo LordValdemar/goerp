@@ -11,4 +11,6 @@ interface UsuarioJpaRepository extends JpaRepository<UsuarioJpa, Long> {
     Optional<UsuarioJpa> findByEmail(Email email);
 
     boolean existsByEmail(Email email);
+
+    boolean existsByAdministradorDaPlataformaTrue();
 }
