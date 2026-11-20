@@ -131,3 +131,6 @@ Mesmas rotas e regras dos clientes, em `/api/v1/fornecedores`. A pesquisa també
 | GET | `/api/v1/produtos?busca=&categoriaId=&ativo=&pagina=&tamanho=` | pesquisa por descrição, código interno ou começo do código de barras |
 | GET | `/api/v1/produtos/{id}` | consulta (com unidade e categoria) |
 | POST | `/api/v1/produtos` | cadastra: código interno (não muda), descrição (até 120), código de barras (GTIN), unidade, categoria, preço de venda (2 casas), custo (4 casas), NCM, CEST, origem, controle de estoque e estoque mínimo |
+| PUT | `/api/v1/produtos/{id}` | altera; envie a `versao` lida (**409** se outra pessoa alterou antes). Toda mudança de preço fica no histórico |
+| DELETE / POST `.../reativar` | `/api/v1/produtos/{id}` | inativa / reativa |
+| GET | `/api/v1/produtos/codigo-barras/{gtin}` | leitura do código de barras (PDV): só produtos ativos |

@@ -77,6 +77,45 @@ class ProdutoTest {
         assertThatThrownBy(() -> CustoUnitario.de("-1")).isInstanceOf(ValorInvalidoException.class);
     }
 
+    @Test
+    void alteracaoPodeManterUnidadeECategoriaQueForamInativadasDepois() {
+        Produto produto = Produto.novo(EMPRESA, "A1", comCategoria(dados(UN, "1", false, null), BEBIDAS), UN, BEBIDAS);
+        UnidadeDeMedida unInativada = UnidadeDeMedida.reconstituir(10L, EMPRESA, "UN", "Unidade", false, false);
+        Categoria bebidasInativada = Categoria.reconstituir(20L, EMPRESA, "Bebidas", false);
+
+        produto.alterar(comCategoria(dados(UN, "2", false, null), BEBIDAS), unInativada, bebidasInativada);
+
+        assertThat(produto.dados().precoDeVenda()).isEqualTo(Dinheiro.de("2"));
+    }
+
+    @Test
+    void alteracaoNaoAceitaTrocarParaUnidadeOuCategoriaInativas() {
+        Produto produto = Produto.novo(EMPRESA, "A1", dados(UN, "1", false, null), UN, null);
+        UnidadeDeMedida fardoInativo = UnidadeDeMedida.reconstituir(12L, EMPRESA, "FD", "Fardo", false, false);
+        Categoria antiga = Categoria.reconstituir(21L, EMPRESA, "Antiga", false);
+
+        assertThatThrownBy(() -> produto.alterar(dados(fardoInativo, "1", false, null), fardoInativo, null))
+                .isInstanceOf(UnidadeInativaException.class);
+        assertThatThrownBy(() -> produto.alterar(comCategoria(dados(UN, "1", false, null), antiga), UN, antiga))
+                .isInstanceOf(CategoriaInativaException.class);
+    }
+
+    @Test
+    void inativaEReativa() {
+        Produto produto = Produto.novo(EMPRESA, "A1", dados(UN, "1", false, null), UN, null);
+
+        produto.inativar();
+        assertThat(produto.ativo()).isFalse();
+        produto.ativar();
+        assertThat(produto.ativo()).isTrue();
+    }
+
+    private static DadosDoProduto comCategoria(DadosDoProduto dados, Categoria categoria) {
+        return new DadosDoProduto(dados.descricao(), dados.codigoDeBarras(), categoria.id(), dados.unidadeId(),
+                dados.precoDeVenda(), dados.precoDeCusto(), dados.fiscais(), dados.controlaEstoque(),
+                dados.estoqueMinimo());
+    }
+
     private static DadosDoProduto dados(UnidadeDeMedida unidade, String preco, boolean controlaEstoque, String minimo) {
         return new DadosDoProduto("Refrigerante 2L", null, null, unidade.id(), Dinheiro.de(preco), null,
                 new DadosFiscais(Ncm.de("22021000"), null, null), controlaEstoque,

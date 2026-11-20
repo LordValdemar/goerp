@@ -64,6 +64,11 @@ class ProdutoRepositorioJpa implements ProdutoRepositorio {
                 ProdutoRepositorioJpa::paraDominio);
     }
 
+    @Override
+    public Optional<Produto> buscarAtivoPorCodigoDeBarras(Gtin codigoDeBarras) {
+        return jpa.findByCodigoDeBarrasAndAtivoTrue(codigoDeBarras).map(ProdutoRepositorioJpa::paraDominio);
+    }
+
     private ProdutoJpa novoRegistro(Produto produto) {
         var registro = new ProdutoJpa();
         registro.setEmpresaId(produto.empresaId());

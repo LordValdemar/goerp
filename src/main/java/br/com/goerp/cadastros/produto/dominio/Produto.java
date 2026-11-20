@@ -39,7 +39,7 @@ public class Produto {
      */
     public static Produto novo(Long empresaId, String codigo, DadosDoProduto dados, UnidadeDeMedida unidade,
             Categoria categoria) {
-        exigirCompatibilidade(dados, unidade, categoria);
+        exigirCompatibilidade(dados, unidade, categoria, null);
         return new Produto(null, empresaId, codigo, dados, true, null);
     }
 
@@ -58,17 +58,39 @@ public class Produto {
         return normalizado;
     }
 
-    private static void exigirCompatibilidade(DadosDoProduto dados, UnidadeDeMedida unidade, Categoria categoria) {
+    /**
+     * Altera os dados. Unidade ou categoria inativas só são recusadas quando escolhidas agora:
+     * um produto que já estava nelas pode continuar sendo alterado nos outros campos.
+     */
+    public void alterar(DadosDoProduto novosDados, UnidadeDeMedida unidade, Categoria categoria) {
+        exigirCompatibilidade(novosDados, unidade, categoria, dados);
+        this.dados = novosDados;
+    }
+
+    public void inativar() {
+        ativo = false;
+    }
+
+    public void ativar() {
+        ativo = true;
+    }
+
+    /** @param anteriores dados atuais do produto; nulo no cadastro */
+    private static void exigirCompatibilidade(DadosDoProduto dados, UnidadeDeMedida unidade, Categoria categoria,
+            DadosDoProduto anteriores) {
         if (!unidade.id().equals(dados.unidadeId())) {
             throw new IllegalArgumentException("Unidade informada não corresponde aos dados do produto");
         }
-        if (!unidade.ativa()) {
+        boolean unidadeNova = anteriores == null || !unidade.id().equals(anteriores.unidadeId());
+        if (unidadeNova && !unidade.ativa()) {
             throw new UnidadeInativaException(unidade.sigla());
         }
         if (!unidade.fracionavel() && !dados.estoqueMinimo().inteira()) {
             throw new EstoqueMinimoFracionadoException(unidade.sigla());
         }
-        if (categoria != null && !categoria.ativa()) {
+        boolean categoriaNova = categoria != null
+                && (anteriores == null || !categoria.id().equals(anteriores.categoriaId()));
+        if (categoriaNova && !categoria.ativa()) {
             throw new CategoriaInativaException(categoria.nome());
         }
     }

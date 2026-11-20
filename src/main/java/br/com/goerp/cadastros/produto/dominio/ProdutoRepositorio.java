@@ -19,4 +19,6 @@ public interface ProdutoRepositorio {
     boolean codigoDeBarrasEmUso(Gtin codigoDeBarras, Long idIgnorado);
 
     Pagina<Produto> pesquisar(FiltroDeProdutos filtro, Paginacao paginacao);
+
+    Optional<Produto> buscarAtivoPorCodigoDeBarras(Gtin codigoDeBarras);
 }

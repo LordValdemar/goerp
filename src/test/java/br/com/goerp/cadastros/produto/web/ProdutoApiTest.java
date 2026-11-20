@@ -2,10 +2,12 @@ package br.com.goerp.cadastros.produto.web;
 
 import static br.com.goerp.usuario.dominio.Permissao.PRODUTO_GERENCIAR;
 import static br.com.goerp.usuario.dominio.Permissao.PRODUTO_LER;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -141,6 +143,112 @@ class ProdutoApiTest extends TesteDeIntegracao {
 
         criar("/api/v1/produtos", leitor, refrigerante("A1", null, unidadeA)).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/produtos").header("Authorization", leitor)).andExpect(status().isOk());
+    }
+
+    @Test
+    void alteraComAVersaoLidaEDetectaEdicaoSimultanea() throws Exception {
+        String local = criarRefrigerante();
+
+        alterar(local, alteracao(0, "9.49")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.precoDeVenda").value(9.49))
+                .andExpect(jsonPath("$.codigo").value("REF-001"))
+                .andExpect(jsonPath("$.versao").value(1));
+
+        alterar(local, alteracao(0, "7.00")).andExpect(status().isConflict());
+        mvc.perform(get(local).header("Authorization", tokenA)).andExpect(jsonPath("$.precoDeVenda").value(9.49));
+    }
+
+    @Test
+    void historicoGuardaCadaPrecoComQuemAlterouEQuando() throws Exception {
+        String local = criarRefrigerante();
+        alterar(local, alteracao(0, "9.49"));
+        alterar(local, alteracao(1, "9.99"));
+        Long id = Long.valueOf(local.substring(local.lastIndexOf('/') + 1));
+
+        var historico = jdbc.queryForList("""
+                SELECT a.preco_venda, r.usuario_id, r.empresa_id, r.momento
+                FROM produto_aud a JOIN revisao r ON r.id = a.rev WHERE a.id = ? ORDER BY a.rev""", id);
+
+        assertThat(historico).extracting(linha -> linha.get("preco_venda").toString())
+                .containsExactly("8.99", "9.49", "9.99");
+        assertThat(historico).allSatisfy(linha -> {
+            assertThat(linha.get("usuario_id")).isNotNull();
+            assertThat(linha.get("empresa_id")).isEqualTo(empresaA.id());
+            assertThat(linha.get("momento")).isNotNull();
+        });
+    }
+
+    @Test
+    void produtoContinuaEditavelDepoisQueSuaCategoriaFoiInativada() throws Exception {
+        String local = criarRefrigerante();
+        mvc.perform(delete("/api/v1/categorias/" + bebidasA).header("Authorization", tokenA));
+
+        alterar(local, alteracao(0, "9.49")).andExpect(status().isOk());
+    }
+
+    @Test
+    void naoTrocaParaCategoriaInativaNemUsaCodigoDeBarrasDeOutroProduto() throws Exception {
+        String local = criarRefrigerante();
+        criar("/api/v1/produtos", tokenA, refrigerante("REF-002", "96385074", unidadeA));
+        Integer antiga = JsonPath.read(criar("/api/v1/categorias", tokenA, "{\"nome\":\"Antiga\"}")
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        mvc.perform(delete("/api/v1/categorias/" + antiga).header("Authorization", tokenA));
+
+        alterar(local, alteracao(0, "8.99").replace("\"categoriaId\":" + bebidasA, "\"categoriaId\":" + antiga))
+                .andExpect(status().isUnprocessableEntity());
+        alterar(local, alteracao(0, "8.99").replace("7891000315507", "96385074"))
+                .andExpect(status().isUnprocessableEntity());
+        alterar(local, alteracao(0, "8.99")).andExpect(status().isOk());
+    }
+
+    @Test
+    void buscaPorCodigoDeBarrasSoEncontraProdutoAtivo() throws Exception {
+        String local = criarRefrigerante();
+
+        mvc.perform(get("/api/v1/produtos/codigo-barras/7891000315507").header("Authorization", tokenA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codigo").value("REF-001"))
+                .andExpect(jsonPath("$.unidade.sigla").value("UN"));
+
+        mvc.perform(delete(local).header("Authorization", tokenA)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/produtos/codigo-barras/7891000315507").header("Authorization", tokenA))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(post(local + "/reativar").header("Authorization", tokenA)).andExpect(jsonPath("$.ativo").value(true));
+        mvc.perform(get("/api/v1/produtos/codigo-barras/7891000315507").header("Authorization", tokenA))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void codigoDeBarrasInvalidoDa422() throws Exception {
+        mvc.perform(get("/api/v1/produtos/codigo-barras/7891000315508").header("Authorization", tokenA))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void empresaBNaoAchaNemAlteraProdutoDaA() throws Exception {
+        String local = criarRefrigerante();
+
+        mvc.perform(get("/api/v1/produtos/codigo-barras/7891000315507").header("Authorization", tokenB))
+                .andExpect(status().isNotFound());
+        mvc.perform(put(local).header("Authorization", tokenB).contentType(MediaType.APPLICATION_JSON)
+                .content(alteracao(0, "1.00"))).andExpect(status().isNotFound());
+        mvc.perform(delete(local).header("Authorization", tokenB)).andExpect(status().isNotFound());
+        mvc.perform(get(local).header("Authorization", tokenA)).andExpect(jsonPath("$.ativo").value(true));
+    }
+
+    private String criarRefrigerante() throws Exception {
+        return criar("/api/v1/produtos", tokenA, refrigerante("REF-001", "7891000315507", unidadeA))
+                .andReturn().getResponse().getHeader("Location");
+    }
+
+    private String alteracao(int versao, String preco) {
+        return refrigerante("REF-001", "7891000315507", unidadeA).replace("8.99", preco)
+                .replace("{", "{\"versao\":" + versao + ",");
+    }
+
+    private ResultActions alterar(String local, String corpo) throws Exception {
+        return mvc.perform(put(local).header("Authorization", tokenA).contentType(MediaType.APPLICATION_JSON).content(corpo));
     }
 
     /** Produto de exemplo, na categoria Bebidas da empresa A. */
