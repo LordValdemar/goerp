@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.springframework.stereotype.Component;
 
+import br.com.goerp.cadastros.produto.aplicacao.PrepararCadastrosDaEmpresa;
 import br.com.goerp.compartilhado.dominio.Cnpj;
 import br.com.goerp.compartilhado.dominio.Email;
 import br.com.goerp.compartilhado.infraestrutura.multiempresa.ContextoDeEmpresa;
@@ -32,11 +33,13 @@ public class Cenario {
     private final VinculoEmpresaRepositorio vinculos;
     private final PerfilRepositorio perfis;
     private final CodificadorDeSenha codificador;
+    private final PrepararCadastrosDaEmpresa prepararCadastros;
 
-    /** Cria a empresa já com o perfil Administrador, como acontecerá no cadastro real. */
+    /** Cria a empresa como no cadastro real: com perfil Administrador e unidades de medida padrão. */
     public Empresa empresa(String cnpj, String razaoSocial) {
         Empresa empresa = empresas.salvar(Empresa.nova(Cnpj.de(cnpj), razaoSocial, null));
         ContextoDeEmpresa.emTodasAsEmpresas(() -> perfis.salvar(Perfil.administradorDa(empresa.id())));
+        prepararCadastros.executar(empresa.id());
         return empresa;
     }
 

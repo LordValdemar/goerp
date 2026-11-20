@@ -12,7 +12,9 @@ public enum Permissao {
     CLIENTE_LER("Consultar clientes"),
     CLIENTE_GERENCIAR("Cadastrar, alterar e inativar clientes"),
     FORNECEDOR_LER("Consultar fornecedores"),
-    FORNECEDOR_GERENCIAR("Cadastrar, alterar e inativar fornecedores");
+    FORNECEDOR_GERENCIAR("Cadastrar, alterar e inativar fornecedores"),
+    PRODUTO_LER("Consultar produtos, categorias e unidades de medida"),
+    PRODUTO_GERENCIAR("Cadastrar, alterar e inativar produtos, categorias e unidades de medida");
 
     private final String descricao;
 

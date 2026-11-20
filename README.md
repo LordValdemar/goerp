@@ -113,3 +113,13 @@ Todas exigem a permissão `PLATAFORMA_ADMINISTRAR`.
 ### Fornecedores (`FORNECEDOR_LER` / `FORNECEDOR_GERENCIAR`)
 
 Mesmas rotas e regras dos clientes, em `/api/v1/fornecedores`. A pesquisa também procura pela pessoa de contato.
+
+### Unidades de medida e categorias (`PRODUTO_LER` / `PRODUTO_GERENCIAR`)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/v1/unidades?ativa=` | unidades da empresa (toda empresa começa com UN, KG, G, L, ML, M, CX, PC, PCT, DZ) |
+| POST | `/api/v1/unidades` | `{sigla, descricao, fracionavel}` (sigla de 1 a 6 letras/números; não muda depois) |
+| PUT | `/api/v1/unidades/{id}` | `{descricao, fracionavel}` |
+| DELETE / POST `.../reativar` | `/api/v1/unidades/{id}` | inativa / reativa |
+| GET / POST / PUT / DELETE | `/api/v1/categorias[/{id}]` | categorias da empresa (nome único, sem diferenciar maiúsculas) |

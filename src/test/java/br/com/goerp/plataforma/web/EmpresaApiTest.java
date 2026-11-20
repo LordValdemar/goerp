@@ -65,6 +65,8 @@ class EmpresaApiTest extends TesteDeIntegracao {
                 .andExpect(jsonPath("$.permissoes", hasSize(Permissao.values().length)));
         mvc.perform(get("/api/v1/perfis").header("Authorization", rosa))
                 .andExpect(jsonPath("$[*].nome", hasItem("Administrador")));
+        mvc.perform(get("/api/v1/unidades").header("Authorization", rosa))
+                .andExpect(jsonPath("$", hasSize(10)));
     }
 
     @Test
@@ -92,6 +94,7 @@ class EmpresaApiTest extends TesteDeIntegracao {
 
         assertThat(jdbc.queryForObject("SELECT count(*) FROM empresa", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM perfil", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM unidade_medida", Integer.class)).isZero();
     }
 
     @Test
