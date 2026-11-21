@@ -1,0 +1,47 @@
+package br.com.goerp.usuario.dominio;
+
+/**
+ * O que um usuário pode fazer dentro de uma empresa. Cada módulo acrescenta as suas.
+ * O nome da constante é o que vai no token e no {@code @PreAuthorize}.
+ */
+public enum Permissao {
+    USUARIO_LER("Consultar usuários da empresa"),
+    USUARIO_GERENCIAR("Cadastrar, alterar e inativar usuários da empresa"),
+    PERFIL_LER("Consultar perfis de acesso"),
+    PERFIL_GERENCIAR("Cadastrar, alterar e inativar perfis de acesso"),
+    CLIENTE_LER("Consultar clientes"),
+    CLIENTE_GERENCIAR("Cadastrar, alterar e inativar clientes"),
+    FORNECEDOR_LER("Consultar fornecedores"),
+    FORNECEDOR_GERENCIAR("Cadastrar, alterar e inativar fornecedores"),
+    PRODUTO_LER("Consultar produtos, categorias e unidades de medida"),
+    PRODUTO_GERENCIAR("Cadastrar, alterar e inativar produtos, categorias e unidades de medida"),
+    ESTOQUE_LER("Consultar saldos e movimentações de estoque"),
+    ESTOQUE_MOVIMENTAR("Lançar entradas e saídas manuais de estoque"),
+    ESTOQUE_AJUSTAR("Ajustar e estornar estoque, fazer inventário e configurar o estoque"),
+    CAIXA_OPERAR("Abrir e fechar o próprio caixa e vender no PDV"),
+    CAIXA_GERENCIAR("Ver e fechar caixas de outros operadores, lançar suprimento e sangria, configurar vendas"),
+    VENDA_LER("Consultar vendas"),
+    VENDA_DESCONTO("Dar desconto em vendas (até o máximo configurado)"),
+    VENDA_CANCELAR("Cancelar vendas enquanto o caixa da venda estiver aberto"),
+    PEDIDO_LER("Consultar pedidos de venda e orçamentos"),
+    PEDIDO_GERENCIAR("Criar, alterar, confirmar e cancelar pedidos de venda e orçamentos"),
+    PEDIDO_FATURAR("Faturar pedidos de venda (baixa o estoque)"),
+    COMPRA_LER("Consultar pedidos de compra e recebimentos"),
+    COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra"),
+    COMPRA_RECEBER("Registrar e estornar recebimentos de mercadoria (entrada no estoque)"),
+    FINANCEIRO_LER("Consultar contas financeiras, categorias, saldos, extratos e contas a pagar e a receber"),
+    CONTA_FINANCEIRA_GERENCIAR("Cadastrar, alterar e inativar contas financeiras e categorias financeiras"),
+    LANCAMENTO_REGISTRAR("Lançar receitas e despesas avulsas, transferir entre contas e estornar lançamentos"),
+    TITULO_GERENCIAR("Lançar, alterar e cancelar contas a pagar e a receber"),
+    TITULO_BAIXAR("Registrar e estornar pagamentos e recebimentos de contas (movimenta as contas financeiras)");
+
+    private final String descricao;
+
+    Permissao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String descricao() {
+        return descricao;
+    }
+}
