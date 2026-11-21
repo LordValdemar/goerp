@@ -2,8 +2,10 @@ package br.com.goerp.compras.web;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,11 +13,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.goerp.cadastros.produto.dominio.CustoUnitario;
 import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.compras.aplicacao.ConsultarRecebimentos;
+import br.com.goerp.compras.aplicacao.ConsultarRecebimentosDoPeriodo;
 import br.com.goerp.compras.aplicacao.EstornarRecebimento;
 import br.com.goerp.compras.aplicacao.ItemInformadoNoRecebimento;
 import br.com.goerp.compras.aplicacao.RegistrarRecebimento;
@@ -44,6 +48,7 @@ public class RecebimentoController {
     private final RegistrarRecebimento registrarRecebimento;
     private final EstornarRecebimento estornarRecebimento;
     private final ConsultarRecebimentos consultar;
+    private final ConsultarRecebimentosDoPeriodo consultarPeriodo;
 
     @PostMapping("/pedidos-compra/{pedidoId}/recebimentos")
     @PreAuthorize("hasAuthority('COMPRA_RECEBER')")
@@ -60,6 +65,18 @@ public class RecebimentoController {
     @PreAuthorize("hasAuthority('COMPRA_LER')")
     public List<RecebimentoResponse> doPedido(@PathVariable Long pedidoId) {
         return consultar.doPedido(pedidoId).stream().map(RecebimentoResponse::de).toList();
+    }
+
+    /** Recebimentos de um período (até 1 ano), com total geral e por fornecedor (sem os estornados). */
+    @GetMapping("/recebimentos")
+    @PreAuthorize("hasAuthority('COMPRA_LER')")
+    public ConsultasDeComprasResponses.Recebimentos doPeriodo(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
+            @RequestParam(required = false) Long fornecedorId,
+            @RequestParam(defaultValue = "false") boolean incluirEstornados) {
+        return ConsultasDeComprasResponses.Recebimentos.de(
+                consultarPeriodo.executar(de, ate, fornecedorId, incluirEstornados));
     }
 
     @GetMapping("/recebimentos/{id}")

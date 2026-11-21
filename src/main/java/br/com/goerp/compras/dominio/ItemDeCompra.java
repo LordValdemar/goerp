@@ -55,6 +55,12 @@ public record ItemDeCompra(
                 .setScale(Dinheiro.CASAS_DECIMAIS, Dinheiro.ARREDONDAMENTO));
     }
 
+    /** Valor do que ainda falta chegar, ao custo negociado. */
+    public Dinheiro valorPendente() {
+        return Dinheiro.de(pendente().valor().multiply(custoNegociado.valor())
+                .setScale(Dinheiro.CASAS_DECIMAIS, Dinheiro.ARREDONDAMENTO));
+    }
+
     ItemDeCompra receber(Quantidade quantidadeRecebida) {
         if (quantidadeRecebida.compareTo(pendente()) > 0) {
             throw new QuantidadeAcimaDoPendenteException(codigo, pendente());

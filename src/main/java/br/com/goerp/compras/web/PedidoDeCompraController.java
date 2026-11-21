@@ -19,6 +19,7 @@ import br.com.goerp.compartilhado.web.PaginaResponse;
 import br.com.goerp.compras.aplicacao.AlterarPedidoDeCompra;
 import br.com.goerp.compras.aplicacao.AndamentoDoPedidoDeCompra;
 import br.com.goerp.compras.aplicacao.ConsultarPedidosDeCompra;
+import br.com.goerp.compras.aplicacao.ConsultarPendenciasDeEntrega;
 import br.com.goerp.compras.aplicacao.CriarPedidoDeCompra;
 import br.com.goerp.compras.dominio.SituacaoDoPedidoDeCompra;
 import jakarta.validation.Valid;
@@ -38,6 +39,7 @@ public class PedidoDeCompraController {
     private final AlterarPedidoDeCompra alterarPedido;
     private final AndamentoDoPedidoDeCompra andamento;
     private final ConsultarPedidosDeCompra consultar;
+    private final ConsultarPendenciasDeEntrega consultarPendencias;
 
     @PostMapping
     @PreAuthorize("hasAuthority('COMPRA_GERENCIAR')")
@@ -71,6 +73,15 @@ public class PedidoDeCompraController {
     @PreAuthorize("hasAuthority('COMPRA_GERENCIAR')")
     public PedidoDeCompraResponse encerrarSaldo(@PathVariable Long id, @Valid @RequestBody Motivo request) {
         return PedidoDeCompraResponse.de(andamento.encerrarSaldo(id, request.motivo()));
+    }
+
+    /** Pedidos aguardando entrega, com valor a receber; {@code atrasados=true} só os atrasados. */
+    @GetMapping("/pendentes")
+    @PreAuthorize("hasAuthority('COMPRA_LER')")
+    public ConsultasDeComprasResponses.Pendencias pendentes(
+            @RequestParam(required = false) Long fornecedorId,
+            @RequestParam(defaultValue = "false") boolean atrasados) {
+        return ConsultasDeComprasResponses.Pendencias.de(consultarPendencias.executar(fornecedorId, atrasados));
     }
 
     @GetMapping("/{id}")

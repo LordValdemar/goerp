@@ -242,3 +242,10 @@ O estorno devolve o pendente ao pedido e estorna as entradas (recusado se a merc
 | GET | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_LER` | recebimentos do pedido |
 | GET | `/api/v1/recebimentos/{id}` | `COMPRA_LER` | consulta |
 | POST | `/api/v1/recebimentos/{id}/estornar` | `COMPRA_RECEBER` | `{motivo}`; uma vez só |
+
+### Consultas de compras (`COMPRA_LER`)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/v1/pedidos-compra/pendentes?fornecedorId=&atrasados=` | pedidos enviados ou parcialmente recebidos, pela previsão de entrega; cada um com o `valorPendente` (o que falta chegar × custo negociado), mais `valorAReceber` e quantos estão `atrasados` |
+| GET | `/api/v1/recebimentos?de=&ate=&fornecedorId=&incluirEstornados=` | recebimentos do período (`de` e `ate` obrigatórios, inclusive, até 366 dias), com fornecedor e número do pedido; `total` e `totalPorFornecedor` nunca somam os estornados |

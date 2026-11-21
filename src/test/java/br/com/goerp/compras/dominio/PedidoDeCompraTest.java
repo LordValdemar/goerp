@@ -139,6 +139,18 @@ class PedidoDeCompraTest {
                 .isInstanceOf(CampoObrigatorioException.class);
     }
 
+    @Test
+    void valorPendenteEhOQueFaltaChegarEZeraQuandoNaoEsperaMais() {
+        PedidoDeCompra pedido = enviado();
+        pedido.receber(List.of(recebido(1L, "60")));
+
+        // 40 x 18,3333 = 733,332 -> 733,33 ; 50 x 7,50 = 375,00
+        assertThat(pedido.valorPendente()).isEqualTo(Dinheiro.de("1108.33"));
+        assertThat(rascunho().valorPendente()).isEqualTo(Dinheiro.ZERO);
+        pedido.encerrarSaldo("Fornecedor sem estoque", AGORA);
+        assertThat(pedido.valorPendente()).isEqualTo(Dinheiro.ZERO);
+    }
+
     private static PedidoDeCompra rascunho() {
         return PedidoDeCompra.rascunho(1L, 1L, 2L, 3L,
                 new PedidoDeCompra.Conteudo(List.of(ARROZ, FEIJAO), PREVISAO, null), AGORA);

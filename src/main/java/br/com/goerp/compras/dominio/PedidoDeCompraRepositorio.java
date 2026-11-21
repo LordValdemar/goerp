@@ -1,5 +1,6 @@
 package br.com.goerp.compras.dominio;
 
+import java.util.List;
 import java.util.Optional;
 
 import br.com.goerp.compartilhado.dominio.Pagina;
@@ -16,4 +17,7 @@ public interface PedidoDeCompraRepositorio {
     Pagina<PedidoDeCompra> pesquisar(Long fornecedorId, SituacaoDoPedidoDeCompra situacao, Paginacao paginacao);
 
     long proximoNumero(Long empresaId);
+
+    /** Enviados ou parcialmente recebidos, pela previsão de entrega (sem previsão por último). */
+    List<PedidoDeCompra> aguardandoEntrega(Long fornecedorId);
 }

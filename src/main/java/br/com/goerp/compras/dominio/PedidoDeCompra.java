@@ -116,6 +116,14 @@ public class PedidoDeCompra {
         return itens.stream().map(ItemDeCompra::valor).reduce(Dinheiro.ZERO, Dinheiro::somar);
     }
 
+    /** Quanto ainda falta receber, em valor (zero se o pedido não espera mais entrega). */
+    public Dinheiro valorPendente() {
+        if (!situacao.aguardandoEntrega()) {
+            return Dinheiro.ZERO;
+        }
+        return itens.stream().map(ItemDeCompra::valorPendente).reduce(Dinheiro.ZERO, Dinheiro::somar);
+    }
+
     public ItemDeCompra item(Long produtoId) {
         return itens.stream().filter(item -> item.produtoId().equals(produtoId)).findFirst()
                 .orElseThrow(() -> new ProdutoForaDoPedidoException(produtoId));

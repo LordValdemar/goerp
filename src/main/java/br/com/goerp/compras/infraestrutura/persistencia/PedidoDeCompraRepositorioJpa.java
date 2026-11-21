@@ -1,5 +1,6 @@
 package br.com.goerp.compras.infraestrutura.persistencia;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -67,6 +68,19 @@ class PedidoDeCompraRepositorioJpa implements PedidoDeCompraRepositorio {
     @Override
     public long proximoNumero(Long empresaId) {
         return contador.proximo(Serie.PEDIDO_DE_COMPRA, empresaId);
+    }
+
+    @Override
+    public List<PedidoDeCompra> aguardandoEntrega(Long fornecedorId) {
+        Specification<PedidoDeCompraJpa> doFornecedor = (p, c, cb) -> fornecedorId == null ? null
+                : cb.equal(p.get("fornecedorId"), fornecedorId);
+        Specification<PedidoDeCompraJpa> aguardando = (p, c, cb) -> p.get("situacao").in(
+                SituacaoDoPedidoDeCompra.ENVIADO, SituacaoDoPedidoDeCompra.PARCIALMENTE_RECEBIDO);
+        // no PostgreSQL, ASC já põe os sem previsão por último (o Hibernate não aceita nullsLast em Criteria)
+        Sort porPrevisao = Sort.by(Sort.Order.asc("previsaoDeEntrega"), Sort.Order.asc("numero"));
+        return jpa.findAll(Specification.allOf(doFornecedor, aguardando), porPrevisao).stream()
+                .map(PedidoDeCompraRepositorioJpa::paraDominio)
+                .toList();
     }
 
     private static PedidoDeCompraJpa novoRegistro(PedidoDeCompra pedido) {
