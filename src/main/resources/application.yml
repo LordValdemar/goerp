@@ -31,6 +31,8 @@ management:
         include: health,info
 
 goerp:
+  # Fuso usado para "o dia" em consultas e resumos (vendas do dia, etc.)
+  fuso-horario: ${GOERP_FUSO_HORARIO:America/Sao_Paulo}
   seguranca:
     segredo-jwt: ${JWT_SECRET:}
     validade-do-acesso: 15m

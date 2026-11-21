@@ -193,6 +193,9 @@ qualquer item, nada é gravado (nem o número). Só o dinheiro gera troco.
 |---|---|---|---|
 | POST | `/api/v1/vendas` | `CAIXA_OPERAR` | `{itens:[{produtoId ou codigoDeBarras, quantidade, desconto}], descontoNaVenda, pagamentos:[{forma, valor}], clienteId, cpfNaNota}` |
 | GET | `/api/v1/vendas/{id}` | `VENDA_LER` ou `CAIXA_OPERAR` | consulta (cupom) |
+| POST | `/api/v1/vendas/{id}/cancelar` | `VENDA_CANCELAR` | `{motivo}`; só com o caixa da venda aberto: devolve o estoque e tira o valor do caixa |
+| GET | `/api/v1/vendas?caixaId=&data=&situacao=&pagina=&tamanho=` | `VENDA_LER` | pesquisa (data no fuso `GOERP_FUSO_HORARIO`, padrão America/Sao_Paulo) |
+| GET | `/api/v1/vendas/resumo?data=&caixaId=` | `VENDA_LER` | quantidade, total, descontos, ticket médio, recebido por forma, cancelamentos |
 | GET / PUT | `/api/v1/vendas/configuracao` | `CAIXA_OPERAR` / `CAIXA_GERENCIAR` | `{descontoMaximoPercentual}` (padrão 10%) |
 
 Desconto exige a permissão `VENDA_DESCONTO` e respeita o máximo configurado. Formas: `DINHEIRO`, `CARTAO_DEBITO`, `CARTAO_CREDITO`, `PIX`.

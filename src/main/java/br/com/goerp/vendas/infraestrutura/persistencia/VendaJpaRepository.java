@@ -4,9 +4,10 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
-interface VendaJpaRepository extends JpaRepository<VendaJpa, Long> {
+interface VendaJpaRepository extends JpaRepository<VendaJpa, Long>, JpaSpecificationExecutor<VendaJpa> {
 
     /** [forma, soma] dos pagamentos das vendas finalizadas do caixa. */
     @Query("""

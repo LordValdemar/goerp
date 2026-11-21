@@ -1,5 +1,6 @@
 package br.com.goerp.estoque.infraestrutura.persistencia;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Sort;
@@ -12,6 +13,7 @@ import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.compartilhado.infraestrutura.persistencia.Paginas;
 import br.com.goerp.estoque.dominio.Movimentacao;
 import br.com.goerp.estoque.dominio.MovimentacaoRepositorio;
+import br.com.goerp.estoque.dominio.OrigemDaMovimentacao;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -58,6 +60,13 @@ class MovimentacaoRepositorioJpa implements MovimentacaoRepositorio {
     public Pagina<Movimentacao> extrato(Long produtoId, Paginacao paginacao) {
         return Paginas.daSpring(jpa.findByProdutoId(produtoId, Paginas.paraSpring(paginacao, MAIS_RECENTES_PRIMEIRO)),
                 MovimentacaoRepositorioJpa::paraDominio);
+    }
+
+    @Override
+    public List<Movimentacao> doDocumento(OrigemDaMovimentacao origem, Long documentoDeOrigem) {
+        return jpa.findByOrigemAndDocumentoDeOrigemAndEstornadaIsNull(origem, documentoDeOrigem).stream()
+                .map(MovimentacaoRepositorioJpa::paraDominio)
+                .toList();
     }
 
     static Movimentacao paraDominio(MovimentacaoJpa registro) {

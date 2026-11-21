@@ -4,6 +4,7 @@ import static br.com.goerp.usuario.dominio.Permissao.CAIXA_OPERAR;
 import static br.com.goerp.usuario.dominio.Permissao.VENDA_DESCONTO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -12,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -198,6 +201,117 @@ class VendaApiTest extends TesteDeIntegracao {
         mvc.perform(get(local).header("Authorization", adminDaB)).andExpect(status().isNotFound());
         abrirCaixa(adminDaB, "0");
         vender(adminDaB, umRefrigerante("[{\"forma\":\"DINHEIRO\",\"valor\":10}]")).andExpect(status().isNotFound());
+    }
+
+    // ---------- cancelamento ----------
+
+    @Test
+    void cancelamentoDevolveOEstoqueETiraOValorDoCaixa() throws Exception {
+        Integer venda = idDe(vender(operadora, """
+                {"itens":[{"produtoId":%d,"quantidade":3},{"produtoId":%d,"quantidade":1.5}],
+                 "pagamentos":[{"forma":"DINHEIRO","valor":110}]}""".formatted(refrigerante, queijo)));
+
+        cancelar(admin, venda, "Cliente desistiu").andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacao").value("CANCELADA"))
+                .andExpect(jsonPath("$.motivoDoCancelamento").value("Cliente desistiu"));
+
+        saldo(refrigerante).andExpect(jsonPath("$.quantidade").value(10));
+        saldo(queijo).andExpect(jsonPath("$.quantidade").value(5));
+        mvc.perform(get("/api/v1/estoque/produtos/" + refrigerante + "/extrato").header("Authorization", admin))
+                .andExpect(jsonPath("$.itens[0].tipo").value("ESTORNO_DE_SAIDA"));
+        mvc.perform(get("/api/v1/caixas/meu").header("Authorization", operadora))
+                .andExpect(jsonPath("$.esperado.DINHEIRO").value(100.0));
+    }
+
+    @Test
+    void cancelaUmaVezSoEComPermissao() throws Exception {
+        Integer venda = idDe(vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]")));
+
+        cancelar(operadora, venda, "Erro").andExpect(status().isForbidden());
+        cancelar(admin, venda, "").andExpect(status().isBadRequest());
+        cancelar(admin, venda, "Erro de digitação").andExpect(status().isOk());
+        cancelar(admin, venda, "De novo").andExpect(status().isUnprocessableEntity());
+        saldo(refrigerante).andExpect(jsonPath("$.quantidade").value(10));
+    }
+
+    @Test
+    void depoisDoFechamentoDoCaixaNaoCancela() throws Exception {
+        Integer venda = idDe(vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]")));
+        Integer caixa = JsonPath.read(mvc.perform(get("/api/v1/caixas/meu").header("Authorization", operadora))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        mvc.perform(post("/api/v1/caixas/" + caixa + "/fechar").header("Authorization", operadora)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"contado\":{}}")).andExpect(status().isOk());
+
+        cancelar(admin, venda, "Tarde demais").andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail").value(
+                        "O caixa desta venda já foi fechado; o cancelamento não é mais possível (use devolução)"));
+    }
+
+    @Test
+    void outraEmpresaNaoCancela() throws Exception {
+        Integer venda = idDe(vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]")));
+
+        cancelar(adminDaB, venda, "Invasão").andExpect(status().isNotFound());
+    }
+
+    // ---------- consultas ----------
+
+    @Test
+    void resumoDoDiaComTicketMedioFormasECancelamentos() throws Exception {
+        vender(operadora, umRefrigerante("[{\"forma\":\"DINHEIRO\",\"valor\":10}]"));
+        vender(operadoraComDesconto, """
+                {"itens":[{"produtoId":%d,"quantidade":2}],"descontoNaVenda":0.98,
+                 "pagamentos":[{"forma":"CARTAO_CREDITO","valor":17}]}""".formatted(refrigerante));
+        Integer cancelada = idDe(vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]")));
+        cancelar(admin, cancelada, "Erro");
+
+        mvc.perform(get("/api/v1/vendas/resumo?data=" + hoje()).header("Authorization", admin))
+                .andExpect(jsonPath("$.quantidade").value(2))
+                .andExpect(jsonPath("$.total").value(25.99))
+                .andExpect(jsonPath("$.descontos").value(0.98))
+                .andExpect(jsonPath("$.ticketMedio").value(13.0))
+                .andExpect(jsonPath("$.recebidoPorForma.DINHEIRO").value(8.99))
+                .andExpect(jsonPath("$.recebidoPorForma.CARTAO_CREDITO").value(17.0))
+                .andExpect(jsonPath("$.cancelamentos").value(1))
+                .andExpect(jsonPath("$.totalCancelado").value(8.99));
+
+        mvc.perform(get("/api/v1/vendas/resumo?data=" + hoje().minusDays(1)).header("Authorization", admin))
+                .andExpect(jsonPath("$.quantidade").value(0))
+                .andExpect(jsonPath("$.ticketMedio").value(0));
+    }
+
+    @Test
+    void pesquisaPorCaixaSituacaoEDia() throws Exception {
+        vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]"));
+        Integer cancelada = idDe(vender(operadora, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]")));
+        vender(operadoraComDesconto, umRefrigerante("[{\"forma\":\"PIX\",\"valor\":8.99}]"));
+        cancelar(admin, cancelada, "Erro");
+        Integer caixaDaAna = JsonPath.read(mvc.perform(get("/api/v1/caixas/meu").header("Authorization", operadora))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        pesquisar(admin, "?data=" + hoje()).andExpect(jsonPath("$.itens[*].numero", contains(3, 2, 1)));
+        pesquisar(admin, "?caixaId=" + caixaDaAna + "&situacao=FINALIZADA")
+                .andExpect(jsonPath("$.itens[*].numero", contains(1)));
+        pesquisar(adminDaB, "").andExpect(jsonPath("$.itens", hasSize(0)));
+        pesquisar(operadora, "").andExpect(status().isForbidden());
+    }
+
+    private ResultActions cancelar(String token, Integer venda, String motivo) throws Exception {
+        return mvc.perform(post("/api/v1/vendas/" + venda + "/cancelar").header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"motivo\":\"" + motivo + "\"}"));
+    }
+
+    private ResultActions pesquisar(String token, String parametros) throws Exception {
+        return mvc.perform(get("/api/v1/vendas" + parametros).header("Authorization", token));
+    }
+
+    private LocalDate hoje() {
+        return LocalDate.ofInstant(relogio.instant(), ZoneId.of("America/Sao_Paulo"));
+    }
+
+    private static Integer idDe(ResultActions resposta) throws Exception {
+        return JsonPath.read(resposta.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(),
+                "$.id");
     }
 
     private String umRefrigerante(String pagamentos) {

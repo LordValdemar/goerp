@@ -21,7 +21,8 @@ public enum Permissao {
     CAIXA_OPERAR("Abrir e fechar o próprio caixa e vender no PDV"),
     CAIXA_GERENCIAR("Ver e fechar caixas de outros operadores, lançar suprimento e sangria, configurar vendas"),
     VENDA_LER("Consultar vendas"),
-    VENDA_DESCONTO("Dar desconto em vendas (até o máximo configurado)");
+    VENDA_DESCONTO("Dar desconto em vendas (até o máximo configurado)"),
+    VENDA_CANCELAR("Cancelar vendas enquanto o caixa da venda estiver aberto");
 
     private final String descricao;
 

@@ -58,7 +58,7 @@ class VendaRepositorioJpa implements VendaRepositorio {
         return jpa.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Venda", id));
     }
 
-    private static Venda paraDominio(VendaJpa registro) {
+    static Venda paraDominio(VendaJpa registro) {
         var itens = registro.getItens().stream()
                 .map(i -> new ItemDeVenda(i.getProdutoId(), i.getCodigo(), i.getDescricao(),
                         new Quantidade(i.getQuantidade()), Dinheiro.de(i.getPrecoUnitario()), Dinheiro.de(i.getDesconto())))
