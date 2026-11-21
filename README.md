@@ -199,3 +199,17 @@ qualquer item, nada é gravado (nem o número). Só o dinheiro gera troco.
 | GET / PUT | `/api/v1/vendas/configuracao` | `CAIXA_OPERAR` / `CAIXA_GERENCIAR` | `{descontoMaximoPercentual}` (padrão 10%) |
 
 Desconto exige a permissão `VENDA_DESCONTO` e respeita o máximo configurado. Formas: `DINHEIRO`, `CARTAO_DEBITO`, `CARTAO_CREDITO`, `PIX`.
+
+### Pedido de venda (`PEDIDO_LER` / `PEDIDO_GERENCIAR` / `PEDIDO_FATURAR`)
+
+Para cliente cadastrado: **orçamento → confirmado → faturado** (cancelável antes de faturar). O orçamento tem validade e pode ser
+alterado (os preços são recopiados do cadastro); confirmado, fica congelado. O faturamento baixa o estoque na mesma transação.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/pedidos-venda` | `PEDIDO_GERENCIAR` | `{clienteId, itens, desconto, validade, observacoes}` cria o orçamento |
+| PUT | `/api/v1/pedidos-venda/{id}` | `PEDIDO_GERENCIAR` | altera o orçamento (envie a `versao` lida; 409 se mudou) |
+| POST | `/api/v1/pedidos-venda/{id}/confirmar` | `PEDIDO_GERENCIAR` | só dentro da validade |
+| POST | `/api/v1/pedidos-venda/{id}/faturar` | `PEDIDO_FATURAR` | baixa o estoque (origem `PEDIDO_DE_VENDA`) |
+| POST | `/api/v1/pedidos-venda/{id}/cancelar` | `PEDIDO_GERENCIAR` | `{motivo}`; antes de faturar |
+| GET | `/api/v1/pedidos-venda?clienteId=&situacao=` e `/{id}` | `PEDIDO_LER` | consulta |

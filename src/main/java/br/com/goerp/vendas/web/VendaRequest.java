@@ -6,6 +6,7 @@ import java.util.List;
 import br.com.goerp.compartilhado.dominio.Cpf;
 import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.Quantidade;
+import br.com.goerp.vendas.aplicacao.ItemSolicitado;
 import br.com.goerp.vendas.aplicacao.SolicitacaoDeVenda;
 import br.com.goerp.vendas.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.Pagamento;
@@ -30,7 +31,7 @@ public record VendaRequest(
 
     SolicitacaoDeVenda paraSolicitacao() {
         return new SolicitacaoDeVenda(
-                itens.stream().map(item -> new SolicitacaoDeVenda.ItemSolicitado(item.produtoId(),
+                itens.stream().map(item -> new ItemSolicitado(item.produtoId(),
                         item.codigoDeBarras(), new Quantidade(item.quantidade()),
                         item.desconto() == null ? null : Dinheiro.de(item.desconto()))).toList(),
                 descontoNaVenda == null ? null : Dinheiro.de(descontoNaVenda),

@@ -5,5 +5,6 @@ public enum OrigemDaMovimentacao {
     MANUAL,
     COMPRA,
     VENDA,
+    PEDIDO_DE_VENDA,
     INVENTARIO
 }

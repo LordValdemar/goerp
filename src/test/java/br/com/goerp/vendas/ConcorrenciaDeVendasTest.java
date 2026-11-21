@@ -33,7 +33,7 @@ import br.com.goerp.suporte.TesteDeIntegracao;
 import br.com.goerp.vendas.aplicacao.AbrirCaixa;
 import br.com.goerp.vendas.aplicacao.RegistrarVenda;
 import br.com.goerp.vendas.aplicacao.SolicitacaoDeVenda;
-import br.com.goerp.vendas.aplicacao.SolicitacaoDeVenda.ItemSolicitado;
+import br.com.goerp.vendas.aplicacao.ItemSolicitado;
 import br.com.goerp.vendas.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.Pagamento;
 
