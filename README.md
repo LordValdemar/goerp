@@ -229,3 +229,16 @@ ser encerrado. Só o rascunho é alterado. Sem custo informado, o item usa o cus
 | POST | `/api/v1/pedidos-compra/{id}/cancelar` | `{motivo}`; só sem recebimento |
 | POST | `/api/v1/pedidos-compra/{id}/encerrar-saldo` | `{motivo}`; o que falta deixa de ser esperado |
 | GET | `/api/v1/pedidos-compra?fornecedorId=&situacao=` e `/{id}` | consulta (com `atrasado` e o pendente de cada item) |
+
+### Recebimento (`COMPRA_RECEBER`)
+
+Numa única transação: atualiza o que falta receber no pedido, dá entrada no estoque (origem `COMPRA`; o custo da nota entra no
+custo médio) e registra o último custo de compra no cadastro do produto. Não recebe mais do que o pendente.
+O estorno devolve o pendente ao pedido e estorna as entradas (recusado se a mercadoria já saiu).
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_RECEBER` | `{notaFiscal, itens:[{produtoId, quantidade, custoUnitario}]}` (sem custo, vale o negociado) |
+| GET | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_LER` | recebimentos do pedido |
+| GET | `/api/v1/recebimentos/{id}` | `COMPRA_LER` | consulta |
+| POST | `/api/v1/recebimentos/{id}/estornar` | `COMPRA_RECEBER` | `{motivo}`; uma vez só |

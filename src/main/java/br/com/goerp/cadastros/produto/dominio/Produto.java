@@ -67,6 +67,12 @@ public class Produto {
         this.dados = novosDados;
     }
 
+    /** Último custo de compra passa a ser o custo do cadastro (base para formar o preço de venda). */
+    public void registrarCustoDeCompra(CustoUnitario custo) {
+        dados = new DadosDoProduto(dados.descricao(), dados.codigoDeBarras(), dados.categoriaId(), dados.unidadeId(),
+                dados.precoDeVenda(), custo, dados.fiscais(), dados.controlaEstoque(), dados.estoqueMinimo());
+    }
+
     public void inativar() {
         ativo = false;
     }

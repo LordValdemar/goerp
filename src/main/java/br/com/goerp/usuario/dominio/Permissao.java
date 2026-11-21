@@ -27,7 +27,8 @@ public enum Permissao {
     PEDIDO_GERENCIAR("Criar, alterar, confirmar e cancelar pedidos de venda e orçamentos"),
     PEDIDO_FATURAR("Faturar pedidos de venda (baixa o estoque)"),
     COMPRA_LER("Consultar pedidos de compra e recebimentos"),
-    COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra");
+    COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra"),
+    COMPRA_RECEBER("Registrar e estornar recebimentos de mercadoria (entrada no estoque)");
 
     private final String descricao;
 
