@@ -18,6 +18,13 @@ public final class Autenticacao {
         return comToken(token(empresaId), acao);
     }
 
+    /** Um usuário específico (ex.: o operador dono do caixa) dentro da empresa. */
+    public static <T> T comoUsuario(Long usuarioId, Long empresaId, Supplier<T> acao) {
+        Jwt token = Jwt.withTokenValue("teste").header("alg", "HS256").subject(usuarioId.toString())
+                .claim("empresa", empresaId).issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(60)).build();
+        return comToken(token, acao);
+    }
+
     public static <T> T comoAdministradorDaPlataforma(Supplier<T> acao) {
         return comToken(token(null), acao);
     }

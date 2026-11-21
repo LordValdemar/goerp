@@ -77,6 +77,11 @@ public class Venda {
         return new Venda(id, numero, dados, momento, situacao, canceladaEm, motivoDoCancelamento, canceladaPor);
     }
 
+    /** A mesma venda com o número definitivo, atribuído na gravação. */
+    public Venda comNumero(long numeroDaVenda) {
+        return new Venda(id, numeroDaVenda, dados(), momento, situacao, canceladaEm, motivoDoCancelamento, canceladaPor);
+    }
+
     private void validar(PoliticaDeDesconto politica) {
         if (itens.isEmpty()) {
             throw new VendaSemItensException();

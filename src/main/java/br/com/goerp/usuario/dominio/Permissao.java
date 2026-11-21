@@ -19,7 +19,9 @@ public enum Permissao {
     ESTOQUE_MOVIMENTAR("Lançar entradas e saídas manuais de estoque"),
     ESTOQUE_AJUSTAR("Ajustar e estornar estoque, fazer inventário e configurar o estoque"),
     CAIXA_OPERAR("Abrir e fechar o próprio caixa e vender no PDV"),
-    CAIXA_GERENCIAR("Ver e fechar caixas de outros operadores, lançar suprimento e sangria");
+    CAIXA_GERENCIAR("Ver e fechar caixas de outros operadores, lançar suprimento e sangria, configurar vendas"),
+    VENDA_LER("Consultar vendas"),
+    VENDA_DESCONTO("Dar desconto em vendas (até o máximo configurado)");
 
     private final String descricao;
 

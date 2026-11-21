@@ -182,3 +182,17 @@ o sistema registra sobra ou falta. O operador só vê e fecha o próprio caixa; 
 | POST | `/api/v1/caixas/{id}/suprimentos` | `CAIXA_GERENCIAR` | `{valor, motivo}` reforço de troco |
 | POST | `/api/v1/caixas/{id}/sangrias` | `CAIXA_GERENCIAR` | `{valor, motivo}` retirada (até o dinheiro disponível) |
 | POST | `/api/v1/caixas/{id}/fechar` | `CAIXA_OPERAR` (próprio) / `CAIXA_GERENCIAR` | `{contado: {DINHEIRO: 250.00, PIX: 45.50, ...}}` |
+
+### Venda no PDV
+
+O PDV envia o carrinho inteiro e os pagamentos de uma vez. Preço, código e descrição vêm do cadastro (o PDV não define preço).
+Numa única transação: confere caixa, produtos, desconto e pagamentos, numera e baixa o estoque. Se faltar estoque de
+qualquer item, nada é gravado (nem o número). Só o dinheiro gera troco.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/vendas` | `CAIXA_OPERAR` | `{itens:[{produtoId ou codigoDeBarras, quantidade, desconto}], descontoNaVenda, pagamentos:[{forma, valor}], clienteId, cpfNaNota}` |
+| GET | `/api/v1/vendas/{id}` | `VENDA_LER` ou `CAIXA_OPERAR` | consulta (cupom) |
+| GET / PUT | `/api/v1/vendas/configuracao` | `CAIXA_OPERAR` / `CAIXA_GERENCIAR` | `{descontoMaximoPercentual}` (padrão 10%) |
+
+Desconto exige a permissão `VENDA_DESCONTO` e respeita o máximo configurado. Formas: `DINHEIRO`, `CARTAO_DEBITO`, `CARTAO_CREDITO`, `PIX`.
