@@ -37,10 +37,12 @@ public class Titulo {
     private final List<Baixa> baixas;
     private String motivoDoCancelamento;
     private Instant canceladoEm;
+    private final Long versao;
 
     private Titulo(Long id, Long empresaId, DadosDoTitulo dados, Parcela parcela, SituacaoDoTitulo situacao,
-            List<Baixa> baixas, String motivoDoCancelamento, Instant canceladoEm) {
+            List<Baixa> baixas, String motivoDoCancelamento, Instant canceladoEm, Long versao) {
         this.id = id;
+        this.versao = versao;
         this.empresaId = Objects.requireNonNull(empresaId, "empresaId");
         this.natureza = dados.natureza();
         this.pessoaId = dados.pessoaId();
@@ -63,13 +65,15 @@ public class Titulo {
     /** Um título por parcela, todos com os mesmos dados. */
     public static List<Titulo> parcelas(Long empresaId, DadosDoTitulo dados, Parcelamento parcelamento) {
         return parcelamento.parcelas().stream()
-                .map(parcela -> new Titulo(null, empresaId, dados, parcela, SituacaoDoTitulo.ABERTO, List.of(), null, null))
+                .map(parcela -> new Titulo(null, empresaId, dados, parcela, SituacaoDoTitulo.ABERTO, List.of(), null, null,
+                        null))
                 .toList();
     }
 
     public static Titulo reconstituir(Long id, Long empresaId, DadosDoTitulo dados, Parcela parcela,
-            SituacaoDoTitulo situacao, List<Baixa> baixas, String motivoDoCancelamento, Instant canceladoEm) {
-        return new Titulo(id, empresaId, dados, parcela, situacao, baixas, motivoDoCancelamento, canceladoEm);
+            SituacaoDoTitulo situacao, List<Baixa> baixas, String motivoDoCancelamento, Instant canceladoEm,
+            Long versao) {
+        return new Titulo(id, empresaId, dados, parcela, situacao, baixas, motivoDoCancelamento, canceladoEm, versao);
     }
 
     /** Corrige o título antes de qualquer pagamento (depois, o valor já foi parcialmente abatido). */
@@ -249,5 +253,9 @@ public class Titulo {
 
     public Instant canceladoEm() {
         return canceladoEm;
+    }
+
+    public Long versao() {
+        return versao;
     }
 }

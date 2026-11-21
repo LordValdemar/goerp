@@ -29,9 +29,11 @@ public enum Permissao {
     COMPRA_LER("Consultar pedidos de compra e recebimentos"),
     COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra"),
     COMPRA_RECEBER("Registrar e estornar recebimentos de mercadoria (entrada no estoque)"),
-    FINANCEIRO_LER("Consultar contas financeiras, categorias, saldos e extratos"),
+    FINANCEIRO_LER("Consultar contas financeiras, categorias, saldos, extratos e contas a pagar e a receber"),
     CONTA_FINANCEIRA_GERENCIAR("Cadastrar, alterar e inativar contas financeiras e categorias financeiras"),
-    LANCAMENTO_REGISTRAR("Lançar receitas e despesas avulsas, transferir entre contas e estornar lançamentos");
+    LANCAMENTO_REGISTRAR("Lançar receitas e despesas avulsas, transferir entre contas e estornar lançamentos"),
+    TITULO_GERENCIAR("Lançar, alterar e cancelar contas a pagar e a receber"),
+    TITULO_BAIXAR("Registrar e estornar pagamentos e recebimentos de contas (movimenta as contas financeiras)");
 
     private final String descricao;
 

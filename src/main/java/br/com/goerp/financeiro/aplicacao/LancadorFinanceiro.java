@@ -9,6 +9,7 @@ import br.com.goerp.financeiro.dominio.ContaFinanceira;
 import br.com.goerp.financeiro.dominio.ContaFinanceiraRepositorio;
 import br.com.goerp.financeiro.dominio.Lancamento;
 import br.com.goerp.financeiro.dominio.LancamentoRepositorio;
+import br.com.goerp.financeiro.dominio.OrigemDoLancamento;
 import br.com.goerp.financeiro.dominio.PedidoDeLancamento;
 
 /**
@@ -33,8 +34,9 @@ public class LancadorFinanceiro {
     }
 
     public Lancamento lancar(Long contaId, PedidoDeLancamento pedido) {
-        // o estorno herda a categoria do original, que já foi validada naquele sentido
-        if (pedido.categoriaId() != null && !pedido.tipo().ehEstorno()) {
+        // só o avulso escolhe a categoria aqui; título e venda já a validaram na origem (e um título
+        // antigo continua podendo ser pago mesmo que sua categoria tenha sido inativada depois)
+        if (pedido.categoriaId() != null && pedido.origem() == OrigemDoLancamento.MANUAL && !pedido.tipo().ehEstorno()) {
             categorias.buscarPorId(pedido.categoriaId())
                     .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria financeira", pedido.categoriaId()))
                     .exigirQueClassifica(pedido.tipo().sentido());

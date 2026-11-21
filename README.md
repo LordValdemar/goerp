@@ -283,3 +283,20 @@ origem. Lançamentos simultâneos na mesma conta esperam a vez (trava na conta),
 | GET | `/api/v1/lancamentos-financeiros/{id}` | `FINANCEIRO_LER` |
 | POST | `/api/v1/lancamentos-financeiros/{id}/estornar` | `{motivo}`; avulso, ou transferência (estorna as duas pontas). Os de títulos e vendas são estornados por eles |
 | POST | `/api/v1/transferencias-financeiras` | `{contaOrigemId, contaDestinoId, valor, forma (padrão TRANSFERENCIA), descricao}`: as duas pontas, ligadas pelo mesmo número |
+
+### Contas a pagar (`FINANCEIRO_LER` / `TITULO_GERENCIAR` / `TITULO_BAIXAR`)
+
+Cada parcela é uma conta (título). O pagamento tira o valor da conta financeira escolhida, com a **forma de pagamento usada**,
+e gera o lançamento na mesma transação: sem saldo, nada é gravado. Pode ser parcial; juros e multa não abatem a dívida,
+desconto abate. O estorno do pagamento devolve o valor devido e o dinheiro, juntos. Só se altera ou cancela sem pagamentos.
+Lançar contas e pagá-las são permissões separadas.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/contas-a-pagar` | `TITULO_GERENCIAR` | `{fornecedorId?, descricao, categoriaId?, documento?, formaPrevista?, condicao:{valor, primeiroVencimento, parcelas} ou {valor, vencimentos:[...]}}` |
+| GET | `/api/v1/contas-a-pagar?fornecedorId=&situacao=&emAberto=&vencimentoDe=&vencimentoAte=&vencidas=` | `FINANCEIRO_LER` | por vencimento; cada uma com `vencido` e `diasEmAtraso` |
+| GET | `/api/v1/contas-a-pagar/resumo` | `FINANCEIRO_LER` | em aberto, vencidas e que vencem hoje (quantidade e valor) |
+| GET/PUT | `/api/v1/contas-a-pagar/{id}` | `FINANCEIRO_LER` / `TITULO_GERENCIAR` | `PUT {descricao, categoriaId, documento, valor, vencimento, versao}` |
+| POST | `/api/v1/contas-a-pagar/{id}/cancelar` | `TITULO_GERENCIAR` | `{motivo}` |
+| POST | `/api/v1/contas-a-pagar/{id}/pagamentos` | `TITULO_BAIXAR` | `{contaId, forma, valorPago, juros?, multa?, desconto?}` |
+| POST | `/api/v1/contas-a-pagar/{id}/pagamentos/{numero}/estornar` | `TITULO_BAIXAR` | `{motivo}` |
