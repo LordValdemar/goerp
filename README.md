@@ -213,3 +213,19 @@ alterado (os preços são recopiados do cadastro); confirmado, fica congelado. O
 | POST | `/api/v1/pedidos-venda/{id}/faturar` | `PEDIDO_FATURAR` | baixa o estoque (origem `PEDIDO_DE_VENDA`) |
 | POST | `/api/v1/pedidos-venda/{id}/cancelar` | `PEDIDO_GERENCIAR` | `{motivo}`; antes de faturar |
 | GET | `/api/v1/pedidos-venda?clienteId=&situacao=` e `/{id}` | `PEDIDO_LER` | consulta |
+
+## Compras
+
+### Pedido de compra (`COMPRA_LER` / `COMPRA_GERENCIAR`)
+
+**Rascunho → enviado → parcialmente recebido → recebido**. Cancelável enquanto nada chegou; com recebimento parcial, o saldo pode
+ser encerrado. Só o rascunho é alterado. Sem custo informado, o item usa o custo do cadastro do produto.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/v1/pedidos-compra` | `{fornecedorId, itens:[{produtoId, quantidade, custoNegociado}], previsaoDeEntrega, observacoes}` |
+| PUT | `/api/v1/pedidos-compra/{id}` | altera o rascunho (envie a `versao` lida) |
+| POST | `/api/v1/pedidos-compra/{id}/enviar` | envia ao fornecedor (congela os itens) |
+| POST | `/api/v1/pedidos-compra/{id}/cancelar` | `{motivo}`; só sem recebimento |
+| POST | `/api/v1/pedidos-compra/{id}/encerrar-saldo` | `{motivo}`; o que falta deixa de ser esperado |
+| GET | `/api/v1/pedidos-compra?fornecedorId=&situacao=` e `/{id}` | consulta (com `atrasado` e o pendente de cada item) |

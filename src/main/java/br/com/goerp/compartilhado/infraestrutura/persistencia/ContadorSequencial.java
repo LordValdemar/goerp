@@ -19,7 +19,8 @@ public class ContadorSequencial {
     /** Tabelas de contador conhecidas (o nome nunca vem de entrada do usuário). */
     public enum Serie {
         VENDA("numeracao_venda"),
-        PEDIDO_DE_VENDA("numeracao_pedido_venda");
+        PEDIDO_DE_VENDA("numeracao_pedido_venda"),
+        PEDIDO_DE_COMPRA("numeracao_pedido_compra");
 
         private final String tabela;
 

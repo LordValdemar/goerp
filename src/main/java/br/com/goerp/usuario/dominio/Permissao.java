@@ -25,7 +25,9 @@ public enum Permissao {
     VENDA_CANCELAR("Cancelar vendas enquanto o caixa da venda estiver aberto"),
     PEDIDO_LER("Consultar pedidos de venda e orçamentos"),
     PEDIDO_GERENCIAR("Criar, alterar, confirmar e cancelar pedidos de venda e orçamentos"),
-    PEDIDO_FATURAR("Faturar pedidos de venda (baixa o estoque)");
+    PEDIDO_FATURAR("Faturar pedidos de venda (baixa o estoque)"),
+    COMPRA_LER("Consultar pedidos de compra e recebimentos"),
+    COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra");
 
     private final String descricao;
 
