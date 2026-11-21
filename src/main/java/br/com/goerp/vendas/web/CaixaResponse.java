@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import br.com.goerp.vendas.aplicacao.ResumoDoCaixa;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.SituacaoDoCaixa;
 import br.com.goerp.vendas.dominio.TipoDeMovimentoDeCaixa;
 

@@ -1,8 +1,8 @@
 package br.com.goerp.vendas.dominio;
 
-import static br.com.goerp.vendas.dominio.FormaDePagamento.CARTAO_CREDITO;
-import static br.com.goerp.vendas.dominio.FormaDePagamento.DINHEIRO;
-import static br.com.goerp.vendas.dominio.FormaDePagamento.PIX;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.CARTAO_CREDITO;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.DINHEIRO;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.PIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -17,6 +17,7 @@ import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.compartilhado.dominio.excecao.CampoObrigatorioException;
 import br.com.goerp.compartilhado.dominio.excecao.ValorInvalidoException;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 class VendaTest {
 
@@ -65,6 +66,15 @@ class VendaTest {
                 new Pagamento(PIX, Dinheiro.de("15")), new Pagamento(DINHEIRO, Dinheiro.de("4")));
 
         assertThat(venda.troco()).isEqualTo(Dinheiro.de("1.02"));
+    }
+
+    @Test
+    void pdvSoAceitaFormasConferidasNoCaixa() {
+        assertThatThrownBy(() -> new Pagamento(FormaDePagamento.BOLETO, Dinheiro.de("10")))
+                .isInstanceOf(FormaNaoAceitaNoPdvException.class)
+                .hasMessage("A forma de pagamento BOLETO não é aceita no PDV");
+        assertThatThrownBy(() -> new Pagamento(FormaDePagamento.A_PRAZO, Dinheiro.de("10")))
+                .isInstanceOf(FormaNaoAceitaNoPdvException.class);
     }
 
     @Test

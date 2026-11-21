@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Repository;
 
 import br.com.goerp.compartilhado.dominio.Dinheiro;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.VendasDoCaixa;
 import lombok.RequiredArgsConstructor;
 

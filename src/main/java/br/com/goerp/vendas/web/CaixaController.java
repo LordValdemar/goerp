@@ -22,7 +22,7 @@ import br.com.goerp.vendas.aplicacao.AbrirCaixa;
 import br.com.goerp.vendas.aplicacao.ConsultarCaixa;
 import br.com.goerp.vendas.aplicacao.FecharCaixa;
 import br.com.goerp.vendas.aplicacao.MovimentarCaixa;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.SituacaoDoCaixa;
 import br.com.goerp.vendas.dominio.TipoDeMovimentoDeCaixa;
 import jakarta.validation.Valid;

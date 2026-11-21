@@ -4,12 +4,12 @@ import static br.com.goerp.compartilhado.dominio.Textos.obrigatorio;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import br.com.goerp.compartilhado.dominio.Dinheiro;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 /**
  * Sessão de caixa de um operador: começa com o troco inicial, recebe as vendas, suprimentos e
@@ -82,7 +82,10 @@ public class Caixa {
     public List<ConferenciaDeCaixa> fechar(Map<FormaDePagamento, Dinheiro> contado,
             Map<FormaDePagamento, Dinheiro> recebidoPelasVendas, Long usuarioId, Instant agora) {
         exigirAberto();
-        conferencias = Arrays.stream(FormaDePagamento.values())
+        contado.keySet().stream().filter(forma -> !forma.conferidaNoCaixa()).findFirst().ifPresent(forma -> {
+            throw new FormaNaoAceitaNoPdvException(forma);
+        });
+        conferencias = FormaDePagamento.conferidasNoCaixa().stream()
                 .map(forma -> new ConferenciaDeCaixa(forma, esperadoEm(forma, recebidoPelasVendas),
                         contado.getOrDefault(forma, Dinheiro.ZERO)))
                 .toList();

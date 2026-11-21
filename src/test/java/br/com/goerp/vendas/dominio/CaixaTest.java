@@ -1,8 +1,8 @@
 package br.com.goerp.vendas.dominio;
 
-import static br.com.goerp.vendas.dominio.FormaDePagamento.CARTAO_DEBITO;
-import static br.com.goerp.vendas.dominio.FormaDePagamento.DINHEIRO;
-import static br.com.goerp.vendas.dominio.FormaDePagamento.PIX;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.CARTAO_DEBITO;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.DINHEIRO;
+import static br.com.goerp.financeiro.dominio.FormaDePagamento.PIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.excecao.CampoObrigatorioException;
 import br.com.goerp.compartilhado.dominio.excecao.ValorInvalidoException;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 class CaixaTest {
 
@@ -40,7 +41,8 @@ class CaixaTest {
                 DINHEIRO, Dinheiro.de("245"), CARTAO_DEBITO, Dinheiro.de("80"), PIX, Dinheiro.de("46.50")),
                 VENDAS, 7L, AGORA);
 
-        assertThat(conferencias).hasSize(FormaDePagamento.values().length);
+        assertThat(conferencias).extracting(ConferenciaDeCaixa::forma)
+                .containsExactlyElementsOf(FormaDePagamento.conferidasNoCaixa());
         assertThat(conferencia(conferencias, DINHEIRO).diferenca()).isEqualTo(Dinheiro.de("-5"));
         assertThat(conferencia(conferencias, CARTAO_DEBITO).confere()).isTrue();
         assertThat(conferencia(conferencias, PIX).diferenca()).isEqualTo(Dinheiro.de("1"));
@@ -57,6 +59,13 @@ class CaixaTest {
 
         caixa.registrarSangria(Dinheiro.de("250"), "Cofre", 7L, AGORA, VENDAS);
         assertThat(caixa.esperadoEm(DINHEIRO, VENDAS)).isEqualTo(Dinheiro.ZERO);
+    }
+
+    @Test
+    void fechamentoRecusaFormaQueNaoPassaPeloCaixa() {
+        assertThatThrownBy(() -> caixa.fechar(Map.of(FormaDePagamento.BOLETO, Dinheiro.de("10")), VENDAS, 7L, AGORA))
+                .isInstanceOf(FormaNaoAceitaNoPdvException.class);
+        assertThat(caixa.situacao()).isEqualTo(SituacaoDoCaixa.ABERTO);
     }
 
     @Test

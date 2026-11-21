@@ -2,7 +2,7 @@ package br.com.goerp.vendas.infraestrutura.persistencia;
 
 import java.math.BigDecimal;
 
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;

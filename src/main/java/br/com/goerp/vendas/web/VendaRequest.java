@@ -8,7 +8,7 @@ import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.Quantidade;
 import br.com.goerp.vendas.aplicacao.ItemSolicitado;
 import br.com.goerp.vendas.aplicacao.SolicitacaoDeVenda;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.Pagamento;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;

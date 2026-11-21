@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import br.com.goerp.compartilhado.dominio.Cpf;
 import br.com.goerp.compartilhado.dominio.Dinheiro;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 /**
  * Venda do PDV, registrada já finalizada: itens e pagamentos chegam juntos e são validados de uma vez.

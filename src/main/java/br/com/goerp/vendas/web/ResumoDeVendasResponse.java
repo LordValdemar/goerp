@@ -5,7 +5,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import br.com.goerp.vendas.aplicacao.ResumoDeVendas;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 public record ResumoDeVendasResponse(
         long quantidade,

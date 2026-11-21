@@ -4,7 +4,7 @@ import java.math.RoundingMode;
 import java.util.Map;
 
 import br.com.goerp.compartilhado.dominio.Dinheiro;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 
 /**
  * Resumo de um período (ex.: o dia). Valores só das vendas finalizadas; cancelamentos à parte.

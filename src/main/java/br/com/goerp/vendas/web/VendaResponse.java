@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.SituacaoDaVenda;
 import br.com.goerp.vendas.dominio.Venda;
 

@@ -16,7 +16,7 @@ import br.com.goerp.compartilhado.infraestrutura.persistencia.Paginas;
 import br.com.goerp.vendas.aplicacao.ConsultasDeVendas;
 import br.com.goerp.vendas.aplicacao.FiltroDeVendas;
 import br.com.goerp.vendas.aplicacao.ResumoDeVendas;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.SituacaoDaVenda;
 import br.com.goerp.vendas.dominio.Venda;
 import jakarta.persistence.criteria.Predicate;

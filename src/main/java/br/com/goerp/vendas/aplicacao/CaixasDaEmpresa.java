@@ -1,6 +1,5 @@
 package br.com.goerp.vendas.aplicacao;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -13,7 +12,7 @@ import br.com.goerp.compartilhado.dominio.excecao.RecursoNaoEncontradoException;
 import br.com.goerp.usuario.dominio.Permissao;
 import br.com.goerp.vendas.dominio.Caixa;
 import br.com.goerp.vendas.dominio.CaixaRepositorio;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.VendasDoCaixa;
 
 /** Busca de caixas com a regra de acesso: cada operador só mexe no próprio, salvo o gerente. */
@@ -49,7 +48,7 @@ public class CaixasDaEmpresa {
     public ResumoDoCaixa resumir(Caixa caixa) {
         Map<FormaDePagamento, Dinheiro> recebido = recebidoPelasVendas(caixa);
         Map<FormaDePagamento, Dinheiro> esperado = new EnumMap<>(FormaDePagamento.class);
-        Arrays.stream(FormaDePagamento.values()).forEach(forma -> esperado.put(forma, caixa.esperadoEm(forma, recebido)));
+        FormaDePagamento.conferidasNoCaixa().stream().forEach(forma -> esperado.put(forma, caixa.esperadoEm(forma, recebido)));
         return new ResumoDoCaixa(caixa, esperado);
     }
 }

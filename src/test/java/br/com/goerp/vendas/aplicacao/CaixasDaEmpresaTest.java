@@ -15,7 +15,7 @@ import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.excecao.OperacaoNaoPermitidaException;
 import br.com.goerp.vendas.dominio.Caixa;
 import br.com.goerp.vendas.dominio.CaixaRepositorio;
-import br.com.goerp.vendas.dominio.FormaDePagamento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import br.com.goerp.vendas.dominio.SituacaoDoCaixa;
 
 class CaixasDaEmpresaTest {
@@ -41,7 +41,7 @@ class CaixasDaEmpresaTest {
     void resumoTrazOEsperadoDeTodasAsFormas() {
         var resumo = caixasComo(OPERADOR, false).resumir(caixa());
 
-        assertThat(resumo.esperado()).hasSize(FormaDePagamento.values().length)
+        assertThat(resumo.esperado()).containsOnlyKeys(FormaDePagamento.conferidasNoCaixa())
                 .containsEntry(FormaDePagamento.DINHEIRO, Dinheiro.de("100"))
                 .containsEntry(FormaDePagamento.PIX, Dinheiro.ZERO);
     }
