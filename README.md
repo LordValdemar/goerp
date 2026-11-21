@@ -300,3 +300,20 @@ Lançar contas e pagá-las são permissões separadas.
 | POST | `/api/v1/contas-a-pagar/{id}/cancelar` | `TITULO_GERENCIAR` | `{motivo}` |
 | POST | `/api/v1/contas-a-pagar/{id}/pagamentos` | `TITULO_BAIXAR` | `{contaId, forma, valorPago, juros?, multa?, desconto?}` |
 | POST | `/api/v1/contas-a-pagar/{id}/pagamentos/{numero}/estornar` | `TITULO_BAIXAR` | `{motivo}` |
+
+### Contas a receber (`FINANCEIRO_LER` / `TITULO_GERENCIAR` / `TITULO_BAIXAR`)
+
+Mesmo funcionamento das contas a pagar, com **cliente obrigatório** e categoria de receita. O recebimento põe o valor na
+conta financeira com a **forma usada pelo cliente** (ex.: um crediário quitado parte em dinheiro, parte por PIX). Estornar
+um recebimento exige que o dinheiro ainda esteja na conta. Cada rota só enxerga o seu lado: uma conta a receber pedida em
+`/contas-a-pagar` dá 404, e vice-versa.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/contas-a-receber` | `TITULO_GERENCIAR` | `{clienteId, descricao, categoriaId?, documento?, formaPrevista?, condicao:{...}}` (padrão: `A_PRAZO`) |
+| GET | `/api/v1/contas-a-receber?clienteId=&situacao=&emAberto=&vencimentoDe=&vencimentoAte=&vencidas=` | `FINANCEIRO_LER` | `vencidas=true`: inadimplência |
+| GET | `/api/v1/contas-a-receber/resumo` | `FINANCEIRO_LER` | em aberto, vencidas e que vencem hoje |
+| GET/PUT | `/api/v1/contas-a-receber/{id}` | `FINANCEIRO_LER` / `TITULO_GERENCIAR` | |
+| POST | `/api/v1/contas-a-receber/{id}/cancelar` | `TITULO_GERENCIAR` | `{motivo}` |
+| POST | `/api/v1/contas-a-receber/{id}/recebimentos` | `TITULO_BAIXAR` | `{contaId, forma, valorPago, juros?, multa?, desconto?}` |
+| POST | `/api/v1/contas-a-receber/{id}/recebimentos/{numero}/estornar` | `TITULO_BAIXAR` | `{motivo}` |
