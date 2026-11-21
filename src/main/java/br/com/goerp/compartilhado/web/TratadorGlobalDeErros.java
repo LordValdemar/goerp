@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import br.com.goerp.compartilhado.dominio.excecao.ConflitoDeEdicaoException;
 import br.com.goerp.compartilhado.dominio.excecao.ExcecaoDeDominio;
+import br.com.goerp.compartilhado.dominio.excecao.OperacaoNaoPermitidaException;
 import br.com.goerp.compartilhado.dominio.excecao.RecursoNaoEncontradoException;
 
 /** Converte exceções em respostas JSON padronizadas (RFC 7807). */
@@ -28,6 +29,11 @@ public class TratadorGlobalDeErros {
     @ExceptionHandler(ExcecaoDeDominio.class)
     public ProblemDetail regraDeNegocioViolada(ExcecaoDeDominio ex) {
         return problema(HttpStatus.UNPROCESSABLE_ENTITY, "Regra de negócio violada", ex.getMessage());
+    }
+
+    @ExceptionHandler(OperacaoNaoPermitidaException.class)
+    public ProblemDetail operacaoNaoPermitida(OperacaoNaoPermitidaException ex) {
+        return problema(HttpStatus.FORBIDDEN, "Acesso negado", ex.getMessage());
     }
 
     @ExceptionHandler(ConflitoDeEdicaoException.class)

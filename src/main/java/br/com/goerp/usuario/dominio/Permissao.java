@@ -17,7 +17,9 @@ public enum Permissao {
     PRODUTO_GERENCIAR("Cadastrar, alterar e inativar produtos, categorias e unidades de medida"),
     ESTOQUE_LER("Consultar saldos e movimentações de estoque"),
     ESTOQUE_MOVIMENTAR("Lançar entradas e saídas manuais de estoque"),
-    ESTOQUE_AJUSTAR("Ajustar e estornar estoque, fazer inventário e configurar o estoque");
+    ESTOQUE_AJUSTAR("Ajustar e estornar estoque, fazer inventário e configurar o estoque"),
+    CAIXA_OPERAR("Abrir e fechar o próprio caixa e vender no PDV"),
+    CAIXA_GERENCIAR("Ver e fechar caixas de outros operadores, lançar suprimento e sangria");
 
     private final String descricao;
 

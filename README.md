@@ -165,3 +165,20 @@ produto contado vira a quantidade contada, com ajustes de origem `INVENTARIO`, t
 | POST | `/api/v1/estoque/inventarios/{id}/finalizar` | `ESTOQUE_AJUSTAR` | ajusta o estoque e devolve os ajustes |
 | POST | `/api/v1/estoque/inventarios/{id}/cancelar` | `ESTOQUE_AJUSTAR` | descarta sem mexer no estoque |
 | GET | `/api/v1/estoque/inventarios[/{id}]` | `ESTOQUE_LER` | consulta |
+
+## Vendas e PDV
+
+### Caixa (`CAIXA_OPERAR` / `CAIXA_GERENCIAR`)
+
+Cada operador abre o próprio caixa (um aberto por vez). No fechamento informa quanto contou em cada forma de pagamento;
+o sistema registra sobra ou falta. O operador só vê e fecha o próprio caixa; o gerente, todos.
+
+| Método | Rota | Permissão | Descrição |
+|---|---|---|---|
+| POST | `/api/v1/caixas` | `CAIXA_OPERAR` | `{trocoInicial}` abre o caixa do usuário |
+| GET | `/api/v1/caixas/meu` | `CAIXA_OPERAR` | caixa aberto do usuário, com o esperado por forma |
+| GET | `/api/v1/caixas/{id}` | `CAIXA_OPERAR` (próprio) / `CAIXA_GERENCIAR` | consulta |
+| GET | `/api/v1/caixas?situacao=` | `CAIXA_GERENCIAR` | todos os caixas |
+| POST | `/api/v1/caixas/{id}/suprimentos` | `CAIXA_GERENCIAR` | `{valor, motivo}` reforço de troco |
+| POST | `/api/v1/caixas/{id}/sangrias` | `CAIXA_GERENCIAR` | `{valor, motivo}` retirada (até o dinheiro disponível) |
+| POST | `/api/v1/caixas/{id}/fechar` | `CAIXA_OPERAR` (próprio) / `CAIXA_GERENCIAR` | `{contado: {DINHEIRO: 250.00, PIX: 45.50, ...}}` |

@@ -1,0 +1,29 @@
+package br.com.goerp.vendas.infraestrutura.persistencia;
+
+import java.math.BigDecimal;
+
+import br.com.goerp.vendas.dominio.FormaDePagamento;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Embeddable
+@NoArgsConstructor
+@AllArgsConstructor
+class ConferenciaDeCaixaJpa {
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FormaDePagamento forma;
+
+    @Column(nullable = false)
+    private BigDecimal esperado;
+
+    @Column(nullable = false)
+    private BigDecimal contado;
+}
