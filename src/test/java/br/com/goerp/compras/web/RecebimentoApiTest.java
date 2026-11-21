@@ -9,6 +9,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,7 @@ class RecebimentoApiTest extends TesteDeIntegracao {
     Integer arroz;
     Integer feijao;
     Integer pedido;
+    Integer fornecedor;
 
     @BeforeEach
     void preparar() throws Exception {
@@ -52,7 +56,7 @@ class RecebimentoApiTest extends TesteDeIntegracao {
         enviar(post("/api/v1/estoque/entradas"), admin,
                 "{\"produtoId\":%d,\"quantidade\":10,\"custoUnitario\":16}".formatted(arroz))
                 .andExpect(status().isCreated());
-        Integer fornecedor = idDe(enviar(post("/api/v1/fornecedores"), admin,
+        fornecedor = idDe(enviar(post("/api/v1/fornecedores"), admin,
                 "{\"documento\":\"11444777000161\",\"nome\":\"Atacado Bom Preço LTDA\"}"));
         pedido = idDe(enviar(post("/api/v1/pedidos-compra"), admin, """
                 {"fornecedorId":%d,"itens":[{"produtoId":%d,"quantidade":100},{"produtoId":%d,"quantidade":50}]}"""
@@ -63,7 +67,7 @@ class RecebimentoApiTest extends TesteDeIntegracao {
 
     @Test
     void recebimentoParcialDaEntradaNoEstoqueRecalculaCustoMedioEAtualizaOCadastro() throws Exception {
-        Integer recebimento = idDe(receber(admin, "NF 1001", "[{\"produtoId\":%d,\"quantidade\":60,\"custoUnitario\":19}]"
+        Integer recebimento = idDe(receber(admin, "1001", "[{\"produtoId\":%d,\"quantidade\":60,\"custoUnitario\":19}]"
                 .formatted(arroz)).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.valorTotal").value(1140.0)));
 
@@ -150,6 +154,101 @@ class RecebimentoApiTest extends TesteDeIntegracao {
         mvc.perform(get("/api/v1/recebimentos/" + recebimento).header("Authorization", adminDaB))
                 .andExpect(status().isNotFound());
         estornar(adminDaB, recebimento).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void semCondicaoGeraUmaContaAPagarDoFornecedorVencendoNoDia() throws Exception {
+        String resposta = receber(admin, "1001", "[{\"produtoId\":%d,\"quantidade\":60,\"custoUnitario\":19}]"
+                .formatted(arroz)).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contasAPagar", hasSize(1)))
+                .andReturn().getResponse().getContentAsString();
+        Integer recebimento = JsonPath.read(resposta, "$.id");
+        Integer conta = JsonPath.read(resposta, "$.contasAPagar[0]");
+
+        contaAPagar(conta).andExpect(jsonPath("$.fornecedorId").value(fornecedor))
+                .andExpect(jsonPath("$.valor").value(1140))
+                .andExpect(jsonPath("$.vencimento").value(hoje().toString()))
+                .andExpect(jsonPath("$.descricao").value("Compra NF 1001 (pedido nº 1)"))
+                .andExpect(jsonPath("$.documento").value("1001"))
+                .andExpect(jsonPath("$.origem").value("RECEBIMENTO_DE_COMPRA"))
+                .andExpect(jsonPath("$.documentoDeOrigem").value(recebimento));
+        mvc.perform(get("/api/v1/recebimentos/" + recebimento).header("Authorization", admin))
+                .andExpect(jsonPath("$.contasAPagar").doesNotExist());
+    }
+
+    @Test
+    void condicaoParceladaComBoletoECategoria() throws Exception {
+        Integer mercadorias = idDe(enviar(post("/api/v1/categorias-financeiras"), admin,
+                "{\"tipo\":\"DESPESA\",\"nome\":\"Mercadorias\"}"));
+
+        String resposta = receberCom("NF 2002", "[{\"produtoId\":%d,\"quantidade\":100}]".formatted(arroz),
+                "{\"parcelas\":3,\"primeiroVencimento\":\"%s\",\"formaPrevista\":\"BOLETO\",\"categoriaId\":%d}"
+                        .formatted(hoje().plusDays(28), mercadorias)).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contasAPagar", hasSize(3)))
+                .andReturn().getResponse().getContentAsString();
+
+        // 100 x 18,50 = 1850,00 em 3: 616,68 + 616,66 + 616,66
+        contaAPagar(JsonPath.read(resposta, "$.contasAPagar[0]")).andExpect(jsonPath("$.valor").value(616.68))
+                .andExpect(jsonPath("$.formaPrevista").value("BOLETO"))
+                .andExpect(jsonPath("$.categoriaId").value(mercadorias));
+        contaAPagar(JsonPath.read(resposta, "$.contasAPagar[2]")).andExpect(jsonPath("$.parcela").value(3))
+                .andExpect(jsonPath("$.vencimento").value(hoje().plusDays(28).plusMonths(2).toString()));
+    }
+
+    @Test
+    void condicaoInvalidaNaoGravaNemOEstoque() throws Exception {
+        Integer receita = idDe(enviar(post("/api/v1/categorias-financeiras"), admin,
+                "{\"tipo\":\"RECEITA\",\"nome\":\"Vendas\"}"));
+        String itens = "[{\"produtoId\":%d,\"quantidade\":10}]".formatted(arroz);
+
+        receberCom("NF 1", itens, "{\"parcelas\":61}").andExpect(status().isUnprocessableEntity());
+        receberCom("NF 1", itens, "{\"categoriaId\":%d}".formatted(receita)).andExpect(status().isUnprocessableEntity());
+
+        saldo(arroz).andExpect(jsonPath("$.quantidade").value(10));
+        pedidoDeCompra().andExpect(jsonPath("$.situacao").value("ENVIADO"));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM recebimento", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM titulo", Integer.class)).isZero();
+    }
+
+    @Test
+    void estornoDoRecebimentoCancelaAsContasEERecusadoSeAlgumaJaFoiPaga() throws Exception {
+        String resposta = receberCom("1", "[{\"produtoId\":%d,\"quantidade\":60}]".formatted(arroz),
+                "{\"parcelas\":2}").andReturn().getResponse().getContentAsString();
+        Integer recebimento = JsonPath.read(resposta, "$.id");
+        Integer primeira = JsonPath.read(resposta, "$.contasAPagar[0]");
+        Integer segunda = JsonPath.read(resposta, "$.contasAPagar[1]");
+        Integer banco = idDe(enviar(post("/api/v1/contas-financeiras"), admin,
+                "{\"tipo\":\"BANCO\",\"nome\":\"Banco\",\"permiteSaldoNegativo\":true}"));
+        enviar(post("/api/v1/contas-a-pagar/%d/pagamentos".formatted(primeira)), admin,
+                "{\"contaId\":%d,\"forma\":\"BOLETO\",\"valorPago\":555}".formatted(banco))
+                .andExpect(status().isOk());
+
+        estornar(admin, recebimento).andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail").value("O título já tem pagamento registrado; estorne os pagamentos antes"));
+        saldo(arroz).andExpect(jsonPath("$.quantidade").value(70));
+        contaAPagar(segunda).andExpect(jsonPath("$.situacao").value("ABERTO"));
+
+        enviar(post("/api/v1/contas-a-pagar/%d/pagamentos/1/estornar".formatted(primeira)), admin,
+                "{\"motivo\":\"Nota devolvida\"}").andExpect(status().isOk());
+        estornar(admin, recebimento).andExpect(status().isOk());
+        contaAPagar(primeira).andExpect(jsonPath("$.situacao").value("CANCELADO"))
+                .andExpect(jsonPath("$.motivoDoCancelamento").value(
+                        "Recebimento da NF 1 estornado: Nota lançada no pedido errado"));
+        contaAPagar(segunda).andExpect(jsonPath("$.situacao").value("CANCELADO"));
+        saldo(arroz).andExpect(jsonPath("$.quantidade").value(10));
+    }
+
+    private ResultActions receberCom(String nota, String itens, String pagamento) throws Exception {
+        return enviar(post("/api/v1/pedidos-compra/%d/recebimentos".formatted(pedido)), admin,
+                "{\"notaFiscal\":\"%s\",\"itens\":%s,\"pagamento\":%s}".formatted(nota, itens, pagamento));
+    }
+
+    private ResultActions contaAPagar(Integer id) throws Exception {
+        return mvc.perform(get("/api/v1/contas-a-pagar/" + id).header("Authorization", admin));
+    }
+
+    private LocalDate hoje() {
+        return LocalDate.ofInstant(relogio.instant(), ZoneId.of("America/Sao_Paulo"));
     }
 
     private ResultActions receber(String token, String nota, String itens) throws Exception {

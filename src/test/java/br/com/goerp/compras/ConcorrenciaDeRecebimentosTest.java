@@ -88,7 +88,7 @@ class ConcorrenciaDeRecebimentosTest extends TesteDeIntegracao {
                 largada.await();
                 try {
                     como(() -> registrarRecebimento.executar(pedido, nota,
-                            List.of(new ItemInformadoNoRecebimento(produto, Quantidade.de("60"), null))));
+                            List.of(new ItemInformadoNoRecebimento(produto, Quantidade.de("60"), null)), null));
                     return true;
                 } catch (RuntimeException recusado) {
                     return false;

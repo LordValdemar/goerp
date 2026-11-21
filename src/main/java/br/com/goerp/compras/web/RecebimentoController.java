@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.goerp.cadastros.produto.dominio.CustoUnitario;
 import br.com.goerp.compartilhado.dominio.Quantidade;
+import br.com.goerp.compras.aplicacao.CondicaoDePagamento;
 import br.com.goerp.compras.aplicacao.ConsultarRecebimentos;
 import br.com.goerp.compras.aplicacao.ConsultarRecebimentosDoPeriodo;
 import br.com.goerp.compras.aplicacao.EstornarRecebimento;
 import br.com.goerp.compras.aplicacao.ItemInformadoNoRecebimento;
 import br.com.goerp.compras.aplicacao.RegistrarRecebimento;
+import br.com.goerp.financeiro.dominio.FormaDePagamento;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -39,7 +41,18 @@ public class RecebimentoController {
     record Item(@NotNull Long produtoId, @NotNull BigDecimal quantidade, BigDecimal custoUnitario) {
     }
 
-    record NovoRecebimento(@NotBlank @Size(max = 60) String notaFiscal, @NotEmpty List<@Valid Item> itens) {
+    /** @param pagamento opcional; sem ele, a conta a pagar vence no dia, em uma parcela */
+    record NovoRecebimento(@NotBlank @Size(max = 60) String notaFiscal, @NotEmpty List<@Valid Item> itens,
+            Pagamento pagamento) {
+    }
+
+    /** Vencimentos escolhidos, ou parcelas mensais a partir do primeiro vencimento. */
+    record Pagamento(Integer parcelas, LocalDate primeiroVencimento, List<LocalDate> vencimentos,
+            FormaDePagamento formaPrevista, Long categoriaId) {
+
+        CondicaoDePagamento condicao() {
+            return new CondicaoDePagamento(parcelas, primeiroVencimento, vencimentos, formaPrevista, categoriaId);
+        }
     }
 
     record Estorno(@NotBlank @Size(max = 300) String motivo) {
@@ -57,7 +70,8 @@ public class RecebimentoController {
         var itens = request.itens().stream().map(item -> new ItemInformadoNoRecebimento(item.produtoId(),
                 new Quantidade(item.quantidade()),
                 item.custoUnitario() == null ? null : new CustoUnitario(item.custoUnitario()))).toList();
-        var recebimento = RecebimentoResponse.de(registrarRecebimento.executar(pedidoId, request.notaFiscal(), itens));
+        var recebimento = RecebimentoResponse.de(registrarRecebimento.executar(pedidoId, request.notaFiscal(), itens,
+                request.pagamento() == null ? null : request.pagamento().condicao()));
         return ResponseEntity.created(URI.create("/api/v1/recebimentos/" + recebimento.id())).body(recebimento);
     }
 

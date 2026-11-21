@@ -236,9 +236,14 @@ Numa única transação: atualiza o que falta receber no pedido, dá entrada no 
 custo médio) e registra o último custo de compra no cadastro do produto. Não recebe mais do que o pendente.
 O estorno devolve o pendente ao pedido e estorna as entradas (recusado se a mercadoria já saiu).
 
+Na mesma transação, o recebimento lança a **conta a pagar** ao fornecedor do pedido, no valor da nota
+("Compra NF 1001 (pedido nº 12)"), conforme o `pagamento` opcional: `{parcelas, primeiroVencimento}` ou `{vencimentos:[...]}`,
+mais `formaPrevista` (ex.: `BOLETO`) e `categoriaId` (despesa). Sem ele, uma parcela vencendo no dia. A resposta traz os ids em
+`contasAPagar`. Estornar o recebimento cancela essas contas; se alguma já foi paga, recusa (estorne o pagamento antes).
+
 | Método | Rota | Permissão | Descrição |
 |---|---|---|---|
-| POST | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_RECEBER` | `{notaFiscal, itens:[{produtoId, quantidade, custoUnitario}]}` (sem custo, vale o negociado) |
+| POST | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_RECEBER` | `{notaFiscal, itens:[{produtoId, quantidade, custoUnitario}], pagamento?}` (sem custo, vale o negociado) |
 | GET | `/api/v1/pedidos-compra/{id}/recebimentos` | `COMPRA_LER` | recebimentos do pedido |
 | GET | `/api/v1/recebimentos/{id}` | `COMPRA_LER` | consulta |
 | POST | `/api/v1/recebimentos/{id}/estornar` | `COMPRA_RECEBER` | `{motivo}`; uma vez só |

@@ -10,10 +10,13 @@ import br.com.goerp.compras.dominio.Recebimento;
 import br.com.goerp.compras.dominio.RecebimentoRepositorio;
 import br.com.goerp.estoque.aplicacao.EstornarMovimentacoesDoDocumento;
 import br.com.goerp.estoque.dominio.OrigemDaMovimentacao;
+import br.com.goerp.financeiro.aplicacao.CancelarTitulosDoDocumento;
+import br.com.goerp.financeiro.dominio.OrigemDoTitulo;
 
 /**
- * Desfaz um recebimento lançado errado: o pedido volta a esperar a mercadoria e as entradas no
- * estoque são estornadas. Se a mercadoria já saiu (vendida), o estoque recusa e nada muda.
+ * Desfaz um recebimento lançado errado: o pedido volta a esperar a mercadoria, as contas a pagar
+ * da nota são canceladas e as entradas no estoque são estornadas. Se a mercadoria já saiu
+ * (vendida) ou alguma conta já foi paga, recusa e nada muda.
  * O custo do cadastro não volta: ele é só uma referência para preço.
  */
 @CasoDeUso
@@ -23,14 +26,17 @@ public class EstornarRecebimento {
     private final PedidoDeCompraRepositorio pedidos;
     private final ComprasDaEmpresa compras;
     private final EstornarMovimentacoesDoDocumento estornarEstoque;
+    private final CancelarTitulosDoDocumento cancelarTitulos;
     private final Clock relogio;
 
     public EstornarRecebimento(RecebimentoRepositorio recebimentos, PedidoDeCompraRepositorio pedidos,
-            ComprasDaEmpresa compras, EstornarMovimentacoesDoDocumento estornarEstoque, Clock relogio) {
+            ComprasDaEmpresa compras, EstornarMovimentacoesDoDocumento estornarEstoque,
+            CancelarTitulosDoDocumento cancelarTitulos, Clock relogio) {
         this.recebimentos = recebimentos;
         this.pedidos = pedidos;
         this.compras = compras;
         this.estornarEstoque = estornarEstoque;
+        this.cancelarTitulos = cancelarTitulos;
         this.relogio = relogio;
     }
 
@@ -42,6 +48,8 @@ public class EstornarRecebimento {
         pedido.estornarRecebimento(recebimento.itens());
         pedidos.salvar(pedido);
         Recebimento estornado = recebimentos.salvar(recebimento);
+        cancelarTitulos.executar(OrigemDoTitulo.RECEBIMENTO_DE_COMPRA, recebimento.id(),
+                "Recebimento da NF " + recebimento.notaFiscal() + " estornado: " + recebimento.motivoDoEstorno());
         estornarEstoque.executar(OrigemDaMovimentacao.COMPRA, recebimento.id(),
                 "Estorno do recebimento da NF " + recebimento.notaFiscal() + ": " + recebimento.motivoDoEstorno());
         return estornado;

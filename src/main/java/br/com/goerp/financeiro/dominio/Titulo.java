@@ -167,11 +167,12 @@ public class Titulo {
         }
     }
 
+    /** Com pagamento, diz o que fazer (estornar antes), mesmo que o título já esteja quitado. */
     private void exigirSemPagamentos() {
-        exigirEmAberto();
         if (!baixasValidas().isEmpty()) {
             throw new TituloComBaixaException();
         }
+        exigirEmAberto();
     }
 
     public DadosDoTitulo dados() {

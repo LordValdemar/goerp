@@ -28,6 +28,7 @@ import br.com.goerp.financeiro.dominio.Titulo;
 import br.com.goerp.financeiro.dominio.TituloRepositorio;
 import br.com.goerp.financeiro.dominio.TotalDeTitulos;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -66,9 +67,19 @@ class TituloRepositorioJpa implements TituloRepositorio {
         return jpa.findById(id).map(this::comBaixas);
     }
 
+    /**
+     * Relê com SELECT ... FOR UPDATE mesmo se o título já foi lido nesta transação: sem isso, o
+     * Hibernate devolveria a cópia antiga em memória, sem o pagamento que outra transação acabou
+     * de gravar enquanto esta esperava a trava. Os pagamentos são relidos também.
+     */
     @Override
     public Optional<Titulo> travar(Long id) {
-        return jpa.travar(id).map(this::comBaixas);
+        return jpa.findById(id).map(registro -> {
+            entityManager.refresh(registro, LockModeType.PESSIMISTIC_WRITE);
+            List<BaixaJpa> doTitulo = baixas.findByTituloIdOrderByNumero(id);
+            doTitulo.forEach(entityManager::refresh);
+            return paraDominio(registro, doTitulo);
+        });
     }
 
     @Override

@@ -138,6 +138,14 @@ class TituloTest {
     }
 
     @Test
+    void quitadoNaoCancelaEDizParaEstornarOPagamentoAntes() {
+        Titulo titulo = titulo("100");
+        titulo.baixar(baixa("100", "0", "0", "0", PIX), AGORA);
+
+        assertThatThrownBy(() -> titulo.cancelar("Compra desfeita", AGORA)).isInstanceOf(TituloComBaixaException.class);
+    }
+
+    @Test
     void vencidoSoEmAbertoEDepoisDoVencimento() {
         Titulo titulo = titulo("100");
 

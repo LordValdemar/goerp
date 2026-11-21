@@ -10,6 +10,8 @@ import br.com.goerp.compartilhado.dominio.Dinheiro;
 import br.com.goerp.compartilhado.dominio.excecao.RecursoNaoEncontradoException;
 import br.com.goerp.financeiro.dominio.ContaFinanceira;
 import br.com.goerp.financeiro.dominio.ContaFinanceiraRepositorio;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 class ContaFinanceiraRepositorioJpa implements ContaFinanceiraRepositorio {
 
     private final ContaFinanceiraJpaRepository jpa;
+    private final EntityManager entityManager;
 
     @Override
     public ContaFinanceira salvar(ContaFinanceira conta) {
@@ -41,9 +44,13 @@ class ContaFinanceiraRepositorioJpa implements ContaFinanceiraRepositorio {
         return jpa.findById(id).map(ContaFinanceiraRepositorioJpa::paraDominio);
     }
 
+    /** Relê com SELECT ... FOR UPDATE mesmo se a conta já foi lida nesta transação (senão viria o saldo antigo). */
     @Override
     public Optional<ContaFinanceira> travar(Long id) {
-        return jpa.travar(id).map(ContaFinanceiraRepositorioJpa::paraDominio);
+        return jpa.findById(id).map(registro -> {
+            entityManager.refresh(registro, LockModeType.PESSIMISTIC_WRITE);
+            return paraDominio(registro);
+        });
     }
 
     @Override
