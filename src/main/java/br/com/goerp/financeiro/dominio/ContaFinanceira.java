@@ -20,10 +20,12 @@ public class ContaFinanceira {
     private boolean permiteSaldoNegativo;
     private Dinheiro saldo;
     private boolean ativa;
+    private final Long versao;
 
     private ContaFinanceira(Long id, Long empresaId, TipoDeConta tipo, String nome, boolean permiteSaldoNegativo,
-            Dinheiro saldo, boolean ativa) {
+            Dinheiro saldo, boolean ativa, Long versao) {
         this.id = id;
+        this.versao = versao;
         this.empresaId = Objects.requireNonNull(empresaId, "empresaId");
         this.tipo = Objects.requireNonNull(tipo, "tipo");
         this.saldo = Objects.requireNonNull(saldo, "saldo");
@@ -33,12 +35,12 @@ public class ContaFinanceira {
 
     /** Toda conta nasce zerada: um saldo inicial entra como lançamento, para ficar no extrato. */
     public static ContaFinanceira nova(Long empresaId, TipoDeConta tipo, String nome, boolean permiteSaldoNegativo) {
-        return new ContaFinanceira(null, empresaId, tipo, nome, permiteSaldoNegativo, Dinheiro.ZERO, true);
+        return new ContaFinanceira(null, empresaId, tipo, nome, permiteSaldoNegativo, Dinheiro.ZERO, true, null);
     }
 
     public static ContaFinanceira reconstituir(Long id, Long empresaId, TipoDeConta tipo, String nome,
-            boolean permiteSaldoNegativo, Dinheiro saldo, boolean ativa) {
-        return new ContaFinanceira(id, empresaId, tipo, nome, permiteSaldoNegativo, saldo, ativa);
+            boolean permiteSaldoNegativo, Dinheiro saldo, boolean ativa, Long versao) {
+        return new ContaFinanceira(id, empresaId, tipo, nome, permiteSaldoNegativo, saldo, ativa, versao);
     }
 
     /** Saldo negativo só faz sentido em banco com cheque especial; nas demais contas é erro de digitação. */
@@ -102,5 +104,10 @@ public class ContaFinanceira {
 
     public boolean ativa() {
         return ativa;
+    }
+
+    /** Muda só quando os dados da conta mudam (não a cada lançamento). */
+    public Long versao() {
+        return versao;
     }
 }

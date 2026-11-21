@@ -249,3 +249,37 @@ O estorno devolve o pendente ao pedido e estorna as entradas (recusado se a merc
 |---|---|---|
 | GET | `/api/v1/pedidos-compra/pendentes?fornecedorId=&atrasados=` | pedidos enviados ou parcialmente recebidos, pela previsão de entrega; cada um com o `valorPendente` (o que falta chegar × custo negociado), mais `valorAReceber` e quantos estão `atrasados` |
 | GET | `/api/v1/recebimentos?de=&ate=&fornecedorId=&incluirEstornados=` | recebimentos do período (`de` e `ate` obrigatórios, inclusive, até 366 dias), com fornecedor e número do pedido; `total` e `totalPorFornecedor` nunca somam os estornados |
+
+## Financeiro
+
+Todo lançamento e todo pagamento registram a **forma de pagamento**: `DINHEIRO`, `PIX`, `CARTAO_DEBITO`, `CARTAO_CREDITO`,
+`BOLETO`, `TRANSFERENCIA` ou `A_PRAZO`. A prazo não movimenta dinheiro na hora: gera um título (conta a receber/pagar), e o
+pagamento dele registra a forma usada. O PDV aceita só as quatro formas conferidas no caixa.
+
+### Contas financeiras e categorias (`FINANCEIRO_LER` / `CONTA_FINANCEIRA_GERENCIAR`)
+
+Conta é onde o dinheiro está: `CAIXA` (cofre, tesouraria), `BANCO` ou `CONTA_DE_PAGAMENTO` (maquininha, carteira PIX). Nasce
+com saldo zero (o saldo inicial entra como lançamento) e só é inativada com saldo zero. Saldo negativo só se a conta permitir
+(ex.: cheque especial). Categorias são o plano de contas simples: `RECEITA` classifica entradas; `DESPESA`, saídas.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET/POST | `/api/v1/contas-financeiras` | `?ativa=`; `{tipo, nome, permiteSaldoNegativo}` |
+| GET/PUT/DELETE | `/api/v1/contas-financeiras/{id}` | `PUT {nome, permiteSaldoNegativo, versao}` (409 se mudou); `DELETE` inativa |
+| POST | `/api/v1/contas-financeiras/{id}/reativar` | |
+| GET | `/api/v1/contas-financeiras/{id}/extrato?forma=&de=&ate=&pagina=&tamanho=` | lançamentos com o saldo após cada um, mais recentes primeiro |
+| GET/POST | `/api/v1/categorias-financeiras` | `?tipo=&ativa=`; `{tipo, nome}` |
+| GET/PUT/DELETE | `/api/v1/categorias-financeiras/{id}` | `PUT {nome}` (o tipo não muda); `DELETE` inativa |
+| POST | `/api/v1/categorias-financeiras/{id}/reativar` | |
+
+### Lançamentos (`LANCAMENTO_REGISTRAR`)
+
+Lançamentos não são alterados nem apagados (trigger no banco); corrige-se por estorno, uma vez só, que mantém a forma e a
+origem. Lançamentos simultâneos na mesma conta esperam a vez (trava na conta), então nunca se gasta o que não existe.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/v1/lancamentos-financeiros` | avulso: `{contaId, sentido: ENTRADA/SAIDA, valor, forma, categoriaId, descricao}` |
+| GET | `/api/v1/lancamentos-financeiros/{id}` | `FINANCEIRO_LER` |
+| POST | `/api/v1/lancamentos-financeiros/{id}/estornar` | `{motivo}`; avulso, ou transferência (estorna as duas pontas). Os de títulos e vendas são estornados por eles |
+| POST | `/api/v1/transferencias-financeiras` | `{contaOrigemId, contaDestinoId, valor, forma (padrão TRANSFERENCIA), descricao}`: as duas pontas, ligadas pelo mesmo número |

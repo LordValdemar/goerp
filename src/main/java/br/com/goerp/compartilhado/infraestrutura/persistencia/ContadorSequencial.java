@@ -20,7 +20,8 @@ public class ContadorSequencial {
     public enum Serie {
         VENDA("numeracao_venda"),
         PEDIDO_DE_VENDA("numeracao_pedido_venda"),
-        PEDIDO_DE_COMPRA("numeracao_pedido_compra");
+        PEDIDO_DE_COMPRA("numeracao_pedido_compra"),
+        TRANSFERENCIA_FINANCEIRA("numeracao_transferencia_financeira");
 
         private final String tabela;
 

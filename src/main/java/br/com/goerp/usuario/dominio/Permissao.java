@@ -28,7 +28,10 @@ public enum Permissao {
     PEDIDO_FATURAR("Faturar pedidos de venda (baixa o estoque)"),
     COMPRA_LER("Consultar pedidos de compra e recebimentos"),
     COMPRA_GERENCIAR("Criar, alterar, enviar, cancelar e encerrar pedidos de compra"),
-    COMPRA_RECEBER("Registrar e estornar recebimentos de mercadoria (entrada no estoque)");
+    COMPRA_RECEBER("Registrar e estornar recebimentos de mercadoria (entrada no estoque)"),
+    FINANCEIRO_LER("Consultar contas financeiras, categorias, saldos e extratos"),
+    CONTA_FINANCEIRA_GERENCIAR("Cadastrar, alterar e inativar contas financeiras e categorias financeiras"),
+    LANCAMENTO_REGISTRAR("Lançar receitas e despesas avulsas, transferir entre contas e estornar lançamentos");
 
     private final String descricao;
 

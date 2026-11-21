@@ -20,7 +20,7 @@ class ContaFinanceiraTest {
     private static final Instant AGORA = Instant.parse("2026-11-21T12:00:00Z");
 
     private final ContaFinanceira caixa = ContaFinanceira.reconstituir(1L, 10L, TipoDeConta.CAIXA, "Tesouraria", false,
-            Dinheiro.ZERO, true);
+            Dinheiro.ZERO, true, 0L);
 
     @Test
     void cadaLancamentoGuardaAFormaEOSaldoResultante() {
@@ -43,7 +43,7 @@ class ContaFinanceiraTest {
         assertThat(caixa.saldo()).isEqualTo(Dinheiro.de("10"));
 
         ContaFinanceira banco = ContaFinanceira.reconstituir(2L, 10L, TipoDeConta.BANCO, "Banco X", true, Dinheiro.ZERO,
-                true);
+                true, 0L);
         assertThat(banco.lancar(pedido(SAIDA, "500", FormaDePagamento.BOLETO), AGORA).saldoResultante())
                 .isEqualTo(Dinheiro.de("-500"));
     }
